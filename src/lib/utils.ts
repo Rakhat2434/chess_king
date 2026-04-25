@@ -47,7 +47,7 @@ export function getExcerpt(text: string, length = 160): string {
 export const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '77755092977';
 export const DISPLAY_PHONE = '+7 775 509 2977';
 export const PHONE_HREF = 'tel:+77755092977';
-export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
+export const WHATSAPP_URL = process.env.NEXT_PUBLIC_WHATSAPP_URL || `https://wa.me/${WHATSAPP_NUMBER}`;
 export const INSTAGRAM_HANDLE = '@king.academy.kz';
 export const INSTAGRAM_URL =
   process.env.NEXT_PUBLIC_INSTAGRAM_URL ||

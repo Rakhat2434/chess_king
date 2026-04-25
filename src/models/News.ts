@@ -22,7 +22,7 @@ const NewsSchema = new Schema<INews>(
     title: { type: String, required: true, trim: true, minlength: 2, maxlength: 200 },
     slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
     excerpt: { type: String, required: true, trim: true, maxlength: 400 },
-    content: { type: String, required: true },
+    content: { type: String, required: true, trim: true },
     coverImage: { type: String, trim: true },
     isPublished: { type: Boolean, default: false, index: true },
     publishedAt: { type: Date },

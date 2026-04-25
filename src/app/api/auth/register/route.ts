@@ -4,15 +4,24 @@ import { z } from 'zod';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import { getErrorMessage, jsonError } from '@/lib/api';
+import { isHoneypotFilled, rateLimit, validatePasswordPolicy } from '@/lib/security';
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(254),
   phone: z.string().trim().max(40).optional().or(z.literal('')),
-  password: z.string().min(6).max(128),
+  password: z.string().min(1).max(128),
+  website: z.string().optional().or(z.literal('')),
 });
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, {
+    keyPrefix: 'auth:register',
+    limit: 5,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (limited) return limited;
+
   try {
     const parsed = registerSchema.safeParse(await req.json());
 
@@ -20,8 +29,17 @@ export async function POST(req: NextRequest) {
       return jsonError('Проверьте корректность заполнения полей');
     }
 
+    if (isHoneypotFilled(parsed.data.website)) {
+      return NextResponse.json({ success: true });
+    }
+
     const { name, phone, password } = parsed.data;
     const email = parsed.data.email.toLowerCase();
+    const passwordPolicyError = validatePasswordPolicy(password);
+
+    if (passwordPolicyError) {
+      return jsonError(passwordPolicyError);
+    }
 
     await connectDB();
 

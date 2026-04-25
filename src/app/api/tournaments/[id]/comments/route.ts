@@ -5,6 +5,7 @@ import connectDB from '@/lib/db';
 import { TournamentComment } from '@/models/index';
 import Tournament from '@/models/Tournament';
 import { isValidObjectId, jsonError } from '@/lib/api';
+import { getClientIp, isHoneypotFilled, rateLimit } from '@/lib/security';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -12,7 +13,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!session) return jsonError('Требуется авторизация', 401);
     if (!isValidObjectId(params.id)) return jsonError('Некорректный id турнира', 400);
 
-    const { text } = await req.json();
+    const limited = rateLimit(req, {
+      keyPrefix: 'comments',
+      limit: 10,
+      windowMs: 10 * 60 * 1000,
+      identifier: `${session.user.id}:${getClientIp(req)}`,
+    });
+    if (limited) return limited;
+
+    const { text, website } = await req.json();
+
+    if (isHoneypotFilled(website)) {
+      return NextResponse.json({ success: true, skipped: true }, { status: 202 });
+    }
     if (typeof text !== 'string' || !text.trim()) return jsonError('Текст не может быть пустым');
     if (text.trim().length > 1000) return jsonError('Слишком длинный комментарий');
 

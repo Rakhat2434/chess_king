@@ -20,6 +20,7 @@ const schema = z.object({
   preferredTime: z.string().trim().min(3, 'Укажите удобное время').max(120),
   level: z.enum(['beginner', 'intermediate', 'advanced']),
   comment: z.string().trim().max(500).optional().or(z.literal('')),
+  website: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -49,6 +50,7 @@ export default function EnrollForm({ branches, coaches, defaultBranch, defaultCo
       level: 'beginner',
       branchId: defaultBranch || '',
       coachId: defaultCoach || '',
+      website: '',
     },
   });
 
@@ -74,7 +76,7 @@ export default function EnrollForm({ branches, coaches, defaultBranch, defaultCo
         throw new Error(err.error || 'Ошибка отправки');
       }
       setSuccess(true);
-      reset({ level: 'beginner', branchId: defaultBranch || '', coachId: defaultCoach || '' });
+      reset({ level: 'beginner', branchId: defaultBranch || '', coachId: defaultCoach || '', website: '' });
       toast.success('Заявка отправлена! Мы свяжемся с вами.');
     } catch (err: any) {
       toast.error(err.message || 'Не удалось отправить заявку');
@@ -98,6 +100,14 @@ export default function EnrollForm({ branches, coaches, defaultBranch, defaultCo
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <input
+        {...register('website')}
+        type="text"
+        className="hidden"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
           <label className="label">Имя родителя / ученика *</label>

@@ -12,7 +12,7 @@ import { LogIn, Eye, EyeOff } from 'lucide-react';
 
 const schema = z.object({
   email: z.string().email('Введите корректный email'),
-  password: z.string().min(6, 'Минимум 6 символов'),
+  password: z.string().min(1, 'Введите пароль'),
 });
 type FormData = z.infer<typeof schema>;
 

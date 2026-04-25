@@ -14,8 +14,13 @@ const schema = z.object({
   name: z.string().min(2, 'Минимум 2 символа').max(100),
   email: z.string().email('Некорректный email'),
   phone: z.string().optional(),
-  password: z.string().min(6, 'Минимум 6 символов'),
+  password: z.string()
+    .min(8, 'Пароль должен содержать минимум 8 символов')
+    .regex(/[A-Za-zА-Яа-яЁё]/, 'Пароль должен содержать минимум 1 букву')
+    .regex(/\d/, 'Пароль должен содержать минимум 1 цифру')
+    .max(128, 'Пароль слишком длинный'),
   confirm: z.string(),
+  website: z.string().optional(),
 }).refine((d) => d.password === d.confirm, {
   message: 'Пароли не совпадают',
   path: ['confirm'],
@@ -34,7 +39,13 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: data.name, email: data.email, phone: data.phone, password: data.password }),
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          password: data.password,
+          website: data.website,
+        }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -61,6 +72,14 @@ export default function RegisterPage() {
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <input
+          {...register('website')}
+          type="text"
+          className="hidden"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+        />
         <div>
           <label className="label">Имя *</label>
           <input {...register('name')} className="input" placeholder="Иванов Иван" autoComplete="name" />
@@ -82,7 +101,7 @@ export default function RegisterPage() {
               {...register('password')}
               type={showPass ? 'text' : 'password'}
               className="input pr-12"
-              placeholder="Минимум 6 символов"
+              placeholder="Минимум 8 символов, буква и цифра"
               autoComplete="new-password"
             />
             <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">

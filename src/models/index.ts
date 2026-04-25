@@ -91,12 +91,12 @@ export interface IChampion extends Document {
 
 const ChampionSchema = new Schema<IChampion>(
   {
-    name: { type: String, required: true, trim: true },
+    name: { type: String, required: true, trim: true, minlength: 2, maxlength: 120 },
     photo: { type: String, trim: true },
-    achievement: { type: String, required: true, trim: true },
-    year: { type: Number, required: true, min: 1900 },
-    branch: { type: Schema.Types.ObjectId, ref: 'Branch' },
-    order: { type: Number, default: 0 },
+    achievement: { type: String, required: true, trim: true, minlength: 2, maxlength: 300 },
+    year: { type: Number, required: true, min: 1900, max: 2100 },
+    branch: { type: Schema.Types.ObjectId, ref: 'Branch', index: true },
+    order: { type: Number, default: 0, index: true },
   },
   { timestamps: true }
 );
@@ -110,13 +110,18 @@ export interface ITournamentVisit extends Document {
   user: mongoose.Types.ObjectId;
   tournament: mongoose.Types.ObjectId;
   visitedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const TournamentVisitSchema = new Schema<ITournamentVisit>({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  tournament: { type: Schema.Types.ObjectId, ref: 'Tournament', required: true },
-  visitedAt: { type: Date, default: Date.now },
-});
+const TournamentVisitSchema = new Schema<ITournamentVisit>(
+  {
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    tournament: { type: Schema.Types.ObjectId, ref: 'Tournament', required: true, index: true },
+    visitedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
 
 TournamentVisitSchema.index({ user: 1, tournament: 1 }, { unique: true });
 

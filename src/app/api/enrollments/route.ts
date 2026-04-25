@@ -6,14 +6,26 @@ import { Enrollment } from '@/models/index';
 import Branch from '@/models/Branch';
 import Coach from '@/models/Coach';
 import { isValidObjectId, jsonError } from '@/lib/api';
+import { isHoneypotFilled, rateLimit } from '@/lib/security';
 
 const enrollmentStatuses = ['new', 'processing', 'confirmed', 'cancelled'];
 const levels = ['beginner', 'intermediate', 'advanced'];
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, {
+    keyPrefix: 'enrollments',
+    limit: 3,
+    windowMs: 30 * 60 * 1000,
+  });
+  if (limited) return limited;
+
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
+
+    if (isHoneypotFilled(body.website)) {
+      return NextResponse.json({ success: true });
+    }
 
     const { parentName, phone, branchId, preferredTime, level } = body;
     if (

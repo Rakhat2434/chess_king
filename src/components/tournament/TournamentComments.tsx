@@ -22,6 +22,7 @@ interface Props {
 export default function TournamentComments({ tournamentId, initialComments, session }: Props) {
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [text, setText] = useState('');
+  const [website, setWebsite] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,15 +33,22 @@ export default function TournamentComments({ tournamentId, initialComments, sess
       const res = await fetch(`/api/tournaments/${tournamentId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text.trim() }),
+        body: JSON.stringify({ text: text.trim(), website }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Ошибка');
       }
       const newComment = await res.json();
+      if (newComment?.skipped) {
+        setText('');
+        setWebsite('');
+        toast.success('Комментарий добавлен');
+        return;
+      }
       setComments([newComment, ...comments]);
       setText('');
+      setWebsite('');
       toast.success('Комментарий добавлен');
     } catch (err: any) {
       toast.error(err.message || 'Не удалось добавить комментарий');
@@ -55,6 +63,15 @@ export default function TournamentComments({ tournamentId, initialComments, sess
       {session ? (
         <form onSubmit={handleSubmit} className="mb-8">
           <div className="bg-gray-50 rounded-2xl p-5">
+            <input
+              type="text"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              className="hidden"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
             <p className="text-sm text-king-gray mb-3">
               Комментируете как <span className="font-semibold text-king-navy">{session.name}</span>
             </p>

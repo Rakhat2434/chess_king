@@ -18,19 +18,20 @@ const UserSchema = new Schema<IUser>(
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
       maxlength: 254,
       match: /^\S+@\S+\.\S+$/,
     },
-    password: { type: String, required: true, minlength: 6, select: false },
+    password: { type: String, required: true, minlength: 8, select: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user', required: true, index: true },
     phone: { type: String, trim: true, maxlength: 40 },
     avatar: { type: String, trim: true },
   },
   { timestamps: true }
 );
+
+UserSchema.index({ email: 1 }, { unique: true });
 
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 export default User;
