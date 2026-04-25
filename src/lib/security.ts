@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export { validatePasswordPolicy } from './validators';
 
 type RateLimitEntry = {
   count: number;
@@ -72,20 +73,4 @@ export function rateLimit(req: NextRequest, options: RateLimitOptions): NextResp
 
 export function isHoneypotFilled(value: unknown): boolean {
   return typeof value === 'string' && value.trim().length > 0;
-}
-
-export function validatePasswordPolicy(password: string): string | null {
-  if (password.length < 8) {
-    return 'Пароль должен содержать минимум 8 символов.';
-  }
-
-  if (!/[A-Za-zА-Яа-яЁё]/.test(password)) {
-    return 'Пароль должен содержать минимум 1 букву.';
-  }
-
-  if (!/\d/.test(password)) {
-    return 'Пароль должен содержать минимум 1 цифру.';
-  }
-
-  return null;
 }

@@ -9,11 +9,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { isValidGmailAddress, isValidKazakhstanPhone } from '@/lib/validators';
 
 const schema = z.object({
   name: z.string().min(2, 'Минимум 2 символа').max(100),
-  email: z.string().email('Некорректный email'),
-  phone: z.string().optional(),
+  email: z.string()
+    .trim()
+    .refine(isValidGmailAddress, 'Введите корректный Gmail адрес: example@gmail.com'),
+  phone: z.string()
+    .trim()
+    .refine(isValidKazakhstanPhone, 'Введите корректный номер: +7 и 10 цифр'),
   password: z.string()
     .min(8, 'Пароль должен содержать минимум 8 символов')
     .regex(/[A-Za-zА-Яа-яЁё]/, 'Пароль должен содержать минимум 1 букву')
@@ -87,12 +92,13 @@ export default function RegisterPage() {
         </div>
         <div>
           <label className="label">Email *</label>
-          <input {...register('email')} type="email" className="input" placeholder="example@mail.com" autoComplete="email" />
+          <input {...register('email')} type="email" className="input" placeholder="example@gmail.com" autoComplete="email" />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
         </div>
         <div>
-          <label className="label">Телефон</label>
+          <label className="label">Телефон *</label>
           <input {...register('phone')} className="input" placeholder="+7 (700) 000-00-00" autoComplete="tel" />
+          {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
         </div>
         <div>
           <label className="label">Пароль *</label>

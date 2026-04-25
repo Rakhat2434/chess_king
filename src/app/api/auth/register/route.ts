@@ -5,11 +5,12 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import { getErrorMessage, jsonError } from '@/lib/api';
 import { isHoneypotFilled, rateLimit, validatePasswordPolicy } from '@/lib/security';
+import { normalizeGmailAddress, normalizeKazakhstanPhone } from '@/lib/validators';
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
-  email: z.string().trim().email().max(254),
-  phone: z.string().trim().max(40).optional().or(z.literal('')),
+  email: z.string().trim().max(254),
+  phone: z.string().trim().min(1).max(40),
   password: z.string().min(1).max(128),
   website: z.string().optional().or(z.literal('')),
 });
@@ -34,8 +35,17 @@ export async function POST(req: NextRequest) {
     }
 
     const { name, phone, password } = parsed.data;
-    const email = parsed.data.email.toLowerCase();
+    const email = normalizeGmailAddress(parsed.data.email);
+    const normalizedPhone = normalizeKazakhstanPhone(phone);
     const passwordPolicyError = validatePasswordPolicy(password);
+
+    if (!email) {
+      return jsonError('Введите корректный Gmail адрес в формате example@gmail.com');
+    }
+
+    if (!normalizedPhone) {
+      return jsonError('Введите корректный номер телефона: +7 и 10 цифр');
+    }
 
     if (passwordPolicyError) {
       return jsonError(passwordPolicyError);
@@ -43,16 +53,16 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const exists = await User.findOne({ email });
+    const exists = await User.findOne({ $or: [{ email }, { phone: normalizedPhone }] });
     if (exists) {
-      return jsonError('Пользователь с таким email уже существует', 409);
+      return jsonError('Пользователь с таким email или телефоном уже существует', 409);
     }
 
     const hashed = await bcrypt.hash(password, 12);
     const user = await User.create({
       name,
       email,
-      phone: phone || undefined,
+      phone: normalizedPhone,
       password: hashed,
       role: 'user',
     });
