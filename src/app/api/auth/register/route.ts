@@ -5,7 +5,7 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import { getErrorMessage, jsonError } from '@/lib/api';
 import { isHoneypotFilled, rateLimit, validatePasswordPolicy } from '@/lib/security';
-import { normalizeGmailAddress, normalizeKazakhstanPhone } from '@/lib/validators';
+import { normalizeEmailAddress, normalizeKazakhstanPhone } from '@/lib/validators';
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -35,12 +35,12 @@ export async function POST(req: NextRequest) {
     }
 
     const { name, phone, password } = parsed.data;
-    const email = normalizeGmailAddress(parsed.data.email);
+    const email = normalizeEmailAddress(parsed.data.email);
     const normalizedPhone = normalizeKazakhstanPhone(phone);
     const passwordPolicyError = validatePasswordPolicy(password);
 
     if (!email) {
-      return jsonError('Введите корректный Gmail адрес в формате example@gmail.com');
+      return jsonError('Введите корректный email адрес');
     }
 
     if (!normalizedPhone) {

@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { isValidGmailAddress } from '@/lib/validators';
+import { isValidEmailAddress } from '@/lib/validators';
 
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
@@ -25,9 +25,9 @@ const UserSchema = new Schema<IUser>(
       match: /^\S+@\S+\.\S+$/,
       validate: {
         validator(this: IUser, value: string) {
-          return this.role !== 'user' || isValidGmailAddress(value);
+          return this.role !== 'user' || isValidEmailAddress(value);
         },
-        message: 'User email must be a valid Gmail address',
+        message: 'User email must be a valid email address',
       },
     },
     password: { type: String, required: true, minlength: 8, select: false },

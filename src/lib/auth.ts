@@ -3,7 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import connectDB from './db';
 import User from '@/models/User';
-import { normalizeGmailAddress } from './validators';
+import { normalizeEmailAddress } from './validators';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const rawEmail = credentials.email.trim().toLowerCase();
-        const email = normalizeGmailAddress(rawEmail) || rawEmail;
+        const email = normalizeEmailAddress(rawEmail) || rawEmail;
 
         await connectDB();
         const user = await User.findOne({ email }).select('+password');

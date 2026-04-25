@@ -1,7 +1,8 @@
 const GMAIL_LOCAL_PART_REGEX = /^[a-z0-9](?:[a-z0-9.]{4,28}[a-z0-9])$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const KAZAKHSTAN_PHONE_REGEX = /^7\d{10}$/;
 
-export function normalizeGmailAddress(value: string): string | null {
+function normalizeGmailAddress(value: string): string | null {
   const email = value.trim().toLowerCase();
   const [localPart, domain, ...rest] = email.split('@');
 
@@ -22,8 +23,29 @@ export function normalizeGmailAddress(value: string): string | null {
   return `${canonicalLocalPart}@gmail.com`;
 }
 
-export function isValidGmailAddress(value: string): boolean {
-  return normalizeGmailAddress(value) !== null;
+export function normalizeEmailAddress(value: string): string | null {
+  const email = value.trim().toLowerCase();
+  const [localPart, domain, ...rest] = email.split('@');
+
+  if (
+    rest.length > 0 ||
+    !localPart ||
+    !domain ||
+    email.length > 254 ||
+    localPart.length > 64 ||
+    !EMAIL_REGEX.test(email) ||
+    domain.includes('..') ||
+    domain.startsWith('.') ||
+    domain.endsWith('.')
+  ) {
+    return null;
+  }
+
+  return domain === 'gmail.com' ? normalizeGmailAddress(email) : email;
+}
+
+export function isValidEmailAddress(value: string): boolean {
+  return normalizeEmailAddress(value) !== null;
 }
 
 export function normalizeKazakhstanPhone(value: string): string | null {
