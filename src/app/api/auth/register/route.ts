@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolve4, resolveMx } from 'node:dns/promises';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import connectDB from '@/lib/db';
@@ -6,6 +7,33 @@ import User from '@/models/User';
 import { getErrorMessage, jsonError } from '@/lib/api';
 import { isHoneypotFilled, rateLimit, validatePasswordPolicy } from '@/lib/security';
 import { normalizeEmailAddress, normalizeKazakhstanPhone } from '@/lib/validators';
+
+async function hasEmailDomainRecords(email: string): Promise<boolean> {
+  const domain = email.split('@')[1];
+  if (!domain) return false;
+
+  const timeout = new Promise<boolean>((resolve) => {
+    setTimeout(() => resolve(false), 2500);
+  });
+
+  const lookup = async () => {
+    try {
+      const mxRecords = await resolveMx(domain);
+      if (mxRecords.length > 0) return true;
+    } catch {
+      // Some domains accept mail through A records without MX.
+    }
+
+    try {
+      const addressRecords = await resolve4(domain);
+      return addressRecords.length > 0;
+    } catch {
+      return false;
+    }
+  };
+
+  return Promise.race([lookup(), timeout]);
+}
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -43,8 +71,13 @@ export async function POST(req: NextRequest) {
       return jsonError('Введите корректный email адрес');
     }
 
+    const hasValidEmailDomain = await hasEmailDomainRecords(email);
+    if (!hasValidEmailDomain) {
+      return jsonError('Укажите рабочий email: домен почты не найден');
+    }
+
     if (!normalizedPhone) {
-      return jsonError('Введите корректный номер телефона: +7 и 10 цифр');
+      return jsonError('Введите корректный мобильный номер Казахстана');
     }
 
     if (passwordPolicyError) {

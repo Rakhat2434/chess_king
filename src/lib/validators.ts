@@ -1,6 +1,57 @@
 const GMAIL_LOCAL_PART_REGEX = /^[a-z0-9](?:[a-z0-9.]{4,28}[a-z0-9])$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const KAZAKHSTAN_PHONE_REGEX = /^7\d{10}$/;
+const KAZAKHSTAN_MOBILE_PREFIXES = new Set([
+  '700',
+  '701',
+  '702',
+  '705',
+  '706',
+  '707',
+  '708',
+  '747',
+  '750',
+  '751',
+  '760',
+  '761',
+  '762',
+  '763',
+  '764',
+  '771',
+  '775',
+  '776',
+  '777',
+  '778',
+]);
+
+const BLOCKED_EMAIL_DOMAINS = new Set([
+  '10minutemail.com',
+  '20minutemail.com',
+  'dispostable.com',
+  'example.com',
+  'example.net',
+  'example.org',
+  'fake.com',
+  'guerrillamail.com',
+  'localhost',
+  'mailinator.com',
+  'sharklasers.com',
+  'temp-mail.org',
+  'tempmail.com',
+  'test.com',
+  'test.kz',
+  'yopmail.com',
+]);
+
+const BLOCKED_EMAIL_LOCAL_PARTS = [
+  /^admin\d*$/,
+  /^demo\d*$/,
+  /^email\d*$/,
+  /^fake\d*$/,
+  /^qwerty\d*$/,
+  /^test\d*$/,
+  /^user\d*$/,
+];
 
 function normalizeGmailAddress(value: string): string | null {
   const email = value.trim().toLowerCase();
@@ -26,6 +77,7 @@ function normalizeGmailAddress(value: string): string | null {
 export function normalizeEmailAddress(value: string): string | null {
   const email = value.trim().toLowerCase();
   const [localPart, domain, ...rest] = email.split('@');
+  const compactLocalPart = localPart?.replace(/[^a-z0-9]/g, '') || '';
 
   if (
     rest.length > 0 ||
@@ -33,10 +85,20 @@ export function normalizeEmailAddress(value: string): string | null {
     !domain ||
     email.length > 254 ||
     localPart.length > 64 ||
+    compactLocalPart.length < 4 ||
     !EMAIL_REGEX.test(email) ||
+    localPart.includes('+') ||
+    localPart.startsWith('.') ||
+    localPart.endsWith('.') ||
+    localPart.includes('..') ||
+    BLOCKED_EMAIL_DOMAINS.has(domain) ||
+    domain.endsWith('.test') ||
+    domain.endsWith('.invalid') ||
+    domain.endsWith('.localhost') ||
     domain.includes('..') ||
     domain.startsWith('.') ||
-    domain.endsWith('.')
+    domain.endsWith('.') ||
+    BLOCKED_EMAIL_LOCAL_PARTS.some((pattern) => pattern.test(compactLocalPart))
   ) {
     return null;
   }
@@ -53,6 +115,20 @@ export function normalizeKazakhstanPhone(value: string): string | null {
   const normalized = digits.length === 11 && digits.startsWith('8') ? `7${digits.slice(1)}` : digits;
 
   if (!KAZAKHSTAN_PHONE_REGEX.test(normalized)) {
+    return null;
+  }
+
+  const operatorPrefix = normalized.slice(1, 4);
+  const subscriberNumber = normalized.slice(4);
+  const uniqueSubscriberDigits = new Set(subscriberNumber).size;
+
+  if (
+    !KAZAKHSTAN_MOBILE_PREFIXES.has(operatorPrefix) ||
+    uniqueSubscriberDigits < 3 ||
+    /^(\d)\1+$/.test(subscriberNumber) ||
+    '0123456789'.includes(subscriberNumber) ||
+    '9876543210'.includes(subscriberNumber)
+  ) {
     return null;
   }
 

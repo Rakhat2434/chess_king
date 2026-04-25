@@ -15,10 +15,10 @@ const schema = z.object({
   name: z.string().min(2, 'Минимум 2 символа').max(100),
   email: z.string()
     .trim()
-    .refine(isValidEmailAddress, 'Введите корректный email адрес'),
+    .refine(isValidEmailAddress, 'Введите рабочий email, не тестовый адрес'),
   phone: z.string()
     .trim()
-    .refine(isValidKazakhstanPhone, 'Введите корректный номер: +7 и 10 цифр'),
+    .refine(isValidKazakhstanPhone, 'Введите корректный мобильный номер Казахстана'),
   password: z.string()
     .min(8, 'Пароль должен содержать минимум 8 символов')
     .regex(/[A-Za-zА-Яа-яЁё]/, 'Пароль должен содержать минимум 1 букву')
