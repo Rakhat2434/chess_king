@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
-import { Enrollment, TournamentComment, TournamentVisit } from '@/models/index';
+import { Enrollment, TournamentComment, TournamentRegistration } from '@/models/index';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
@@ -16,6 +16,14 @@ const statusLabel: Record<string, { label: string; color: string }> = {
   cancelled: { label: 'Отменена', color: 'bg-red-100 text-red-700' },
 };
 
+const tournamentStatusLabel: Record<string, { label: string; color: string }> = {
+  pending: { label: 'Заявка отправлена', color: 'bg-yellow-100 text-yellow-700' },
+  approved: { label: 'Участие подтверждено', color: 'bg-green-100 text-green-700' },
+  rejected: { label: 'Отказано', color: 'bg-red-100 text-red-700' },
+  attended: { label: 'Участвовал', color: 'bg-blue-100 text-blue-700' },
+  cancelled: { label: 'Отменено', color: 'bg-gray-100 text-gray-600' },
+};
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/login');
@@ -23,20 +31,23 @@ export default async function DashboardPage() {
   const userId = session.user.id;
   await connectDB();
 
-  const [enrollments, comments, visits] = await Promise.all([
+  const [enrollments, comments, tournamentRegistrations] = await Promise.all([
     Enrollment.find({ user: userId })
       .sort({ createdAt: -1 })
       .populate('branch', 'name')
       .populate('coach', 'name')
       .lean(),
-    TournamentComment.find({ user: userId })
+    TournamentComment.find({ user: userId, isDeleted: { $ne: true } })
       .sort({ createdAt: -1 })
       .populate('tournament', 'title slug')
       .lean(),
-    TournamentVisit.find({ user: userId })
-      .sort({ visitedAt: -1 })
-      .limit(20)
-      .populate('tournament', 'title slug status')
+    TournamentRegistration.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'tournament',
+        select: 'title slug startDate endDate branch',
+        populate: { path: 'branch', select: 'name city' },
+      })
       .lean(),
   ]);
 
@@ -56,8 +67,9 @@ export default async function DashboardPage() {
           <DashboardTabs
             enrollments={JSON.parse(JSON.stringify(enrollments))}
             comments={JSON.parse(JSON.stringify(comments))}
-            visits={JSON.parse(JSON.stringify(visits))}
+            tournamentRegistrations={JSON.parse(JSON.stringify(tournamentRegistrations))}
             statusLabel={statusLabel}
+            tournamentStatusLabel={tournamentStatusLabel}
           />
         </div>
       </main>

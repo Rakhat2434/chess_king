@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Tournament from '@/models/Tournament';
-import { TournamentComment, TournamentVisit } from '@/models/index';
+import { TournamentComment, TournamentRegistration, TournamentVisit } from '@/models/index';
 import { requireAdmin } from '@/lib/adminGuard';
 import { createSlug } from '@/lib/utils';
 import { getErrorMessage, isValidObjectId, jsonError } from '@/lib/api';
@@ -105,6 +105,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!tournament) return jsonError('Не найдено', 404);
   await Promise.all([
     TournamentComment.deleteMany({ tournament: params.id }),
+    TournamentRegistration.deleteMany({ tournament: params.id }),
     TournamentVisit.deleteMany({ tournament: params.id }),
   ]);
   return NextResponse.json({ success: true });

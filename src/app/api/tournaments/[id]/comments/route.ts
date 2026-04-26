@@ -37,6 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const comment = await TournamentComment.create({
       tournament: params.id,
       user: session.user.id,
+      content: text.trim(),
       text: text.trim(),
       isVisible: true,
     });
@@ -55,6 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const comments = await TournamentComment.find({
       tournament: params.id,
       isVisible: true,
+      isDeleted: { $ne: true },
     }).populate('user', 'name').sort({ createdAt: -1 }).limit(50).lean();
     return NextResponse.json(comments);
   } catch {

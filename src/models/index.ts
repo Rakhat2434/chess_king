@@ -9,8 +9,12 @@ export interface ITournamentComment extends Document {
   _id: mongoose.Types.ObjectId;
   tournament: mongoose.Types.ObjectId;
   user: mongoose.Types.ObjectId;
-  text: string;
+  content: string;
+  text?: string;
   isVisible: boolean;
+  isDeleted: boolean;
+  deletedAt?: Date;
+  deletedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,15 +23,63 @@ const TournamentCommentSchema = new Schema<ITournamentComment>(
   {
     tournament: { type: Schema.Types.ObjectId, ref: 'Tournament', required: true, index: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    text: { type: String, required: true, trim: true, minlength: 1, maxlength: 1000 },
+    content: { type: String, trim: true, minlength: 1, maxlength: 1000 },
+    text: { type: String, trim: true, minlength: 1, maxlength: 1000 },
     isVisible: { type: Boolean, default: true, index: true },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date },
+    deletedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );
 
+TournamentCommentSchema.pre('validate', function (next) {
+  if (!this.content && this.text) this.content = this.text;
+  if (!this.text && this.content) this.text = this.content;
+  next();
+});
+
 export const TournamentComment: Model<ITournamentComment> =
   mongoose.models.TournamentComment ||
   mongoose.model<ITournamentComment>('TournamentComment', TournamentCommentSchema);
+
+// ─── TournamentRegistration ─────────────────────────────────────
+export type TournamentRegistrationStatus = 'pending' | 'approved' | 'rejected' | 'attended' | 'cancelled';
+
+export interface ITournamentRegistration extends Document {
+  _id: mongoose.Types.ObjectId;
+  user: mongoose.Types.ObjectId;
+  tournament: mongoose.Types.ObjectId;
+  status: TournamentRegistrationStatus;
+  adminNote?: string;
+  updatedBy?: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const TournamentRegistrationSchema = new Schema<ITournamentRegistration>(
+  {
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    tournament: { type: Schema.Types.ObjectId, ref: 'Tournament', required: true, index: true },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected', 'attended', 'cancelled'],
+      default: 'pending',
+      required: true,
+      index: true,
+    },
+    adminNote: { type: String, trim: true, maxlength: 500 },
+    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  },
+  { timestamps: true }
+);
+
+TournamentRegistrationSchema.index({ user: 1, tournament: 1 }, { unique: true });
+TournamentRegistrationSchema.index({ status: 1, createdAt: -1 });
+
+export const TournamentRegistration: Model<ITournamentRegistration> =
+  mongoose.models.TournamentRegistration ||
+  mongoose.model<ITournamentRegistration>('TournamentRegistration', TournamentRegistrationSchema);
 
 // ─── Enrollment (Записи на уроки) ────────────────────────────────
 export interface IEnrollment extends Document {

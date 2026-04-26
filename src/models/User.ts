@@ -9,6 +9,7 @@ export interface IUser extends Document {
   role: 'user' | 'admin';
   phone?: string;
   avatar?: string;
+  emailVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +43,7 @@ const UserSchema = new Schema<IUser>(
       },
     },
     avatar: { type: String, trim: true },
+    emailVerified: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );

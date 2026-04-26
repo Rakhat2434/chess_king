@@ -2,21 +2,22 @@
 
 import { useState } from 'react';
 import { formatDate } from '@/lib/utils';
-import { MessageSquare, Send, LogIn } from 'lucide-react';
+import { MessageSquare, Send, LogIn, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 interface Comment {
   _id: string;
   text: string;
-  user: { name: string };
+  content?: string;
+  user: { _id?: string; name: string };
   createdAt: string;
 }
 
 interface Props {
   tournamentId: string;
   initialComments: Comment[];
-  session: { id: string; name: string } | null;
+  session: { id: string; name: string; role: 'user' | 'admin' } | null;
 }
 
 export default function TournamentComments({ tournamentId, initialComments, session }: Props) {
@@ -24,6 +25,7 @@ export default function TournamentComments({ tournamentId, initialComments, sess
   const [text, setText] = useState('');
   const [website, setWebsite] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +56,24 @@ export default function TournamentComments({ tournamentId, initialComments, sess
       toast.error(err.message || 'Не удалось добавить комментарий');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    try {
+      const res = await fetch(`/api/tournaments/${tournamentId}/comments/${commentId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Ошибка удаления');
+      }
+      setComments(comments.filter(comment => comment._id !== commentId));
+      toast.success('Комментарий удален');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось удалить комментарий');
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -112,7 +132,9 @@ export default function TournamentComments({ tournamentId, initialComments, sess
         </div>
       ) : (
         <div className="space-y-4">
-          {comments.map((c) => (
+          {comments.map((c) => {
+            const canDelete = Boolean(session && (session.role === 'admin' || c.user?._id === session.id));
+            return (
             <div key={c._id} className="bg-gray-50 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2.5">
@@ -121,11 +143,37 @@ export default function TournamentComments({ tournamentId, initialComments, sess
                   </div>
                   <span className="font-semibold text-king-navy text-sm">{c.user?.name || 'Пользователь'}</span>
                 </div>
-                <span className="text-xs text-king-gray">{formatDate(c.createdAt)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-king-gray">{formatDate(c.createdAt)}</span>
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirm(c._id)}
+                      className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+                      title="Удалить комментарий"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
-              <p className="text-king-navy text-sm leading-relaxed pl-10">{c.text}</p>
+              <p className="text-king-navy text-sm leading-relaxed pl-10">{c.content || c.text}</p>
             </div>
-          ))}
+          );
+          })}
+        </div>
+      )}
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="font-display text-lg font-bold text-king-navy mb-2">Удалить комментарий?</h3>
+            <p className="text-sm text-king-gray">Комментарий исчезнет из публичного списка.</p>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setDeleteConfirm(null)} className="btn-outline flex-1 py-2.5 text-sm">Отмена</button>
+              <button onClick={() => deleteComment(deleteConfirm)} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold">Удалить</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

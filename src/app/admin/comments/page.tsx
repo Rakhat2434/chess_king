@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
 interface Comment {
-  _id: string; text: string; isVisible: boolean; createdAt: string;
+  _id: string; text?: string; content?: string; isVisible: boolean; createdAt: string;
   user?: { name: string; email: string };
   tournament?: { title: string; slug: string };
 }
@@ -90,7 +90,7 @@ export default function AdminCommentsPage() {
                     <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">Скрыт</span>
                   )}
                 </div>
-                <p className="text-king-navy text-sm leading-relaxed">{item.text}</p>
+                <p className="text-king-navy text-sm leading-relaxed">{item.content || item.text}</p>
                 {item.tournament && (
                   <Link
                     href={`/tournaments/${item.tournament.slug}`}

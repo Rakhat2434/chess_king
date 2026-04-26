@@ -3,8 +3,8 @@ import News from '@/models/News';
 import Tournament from '@/models/Tournament';
 import Branch from '@/models/Branch';
 import Coach from '@/models/Coach';
-import { Enrollment, TournamentComment } from '@/models/index';
-import { Newspaper, Trophy, MapPin, Users, ClipboardList, MessageSquare, TrendingUp } from 'lucide-react';
+import { Enrollment, TournamentComment, TournamentRegistration } from '@/models/index';
+import { Newspaper, Trophy, MapPin, Users, ClipboardList, MessageSquare, TrendingUp, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ export default async function AdminDashboardPage() {
 
   const [
     newsCount, tournamentsCount, branchesCount, coachesCount,
-    enrollmentsCount, newEnrollments, commentsCount,
+    enrollmentsCount, newEnrollments, commentsCount, tournamentRegistrationsCount, pendingTournamentRegistrations,
   ] = await Promise.all([
     News.countDocuments(),
     Tournament.countDocuments(),
@@ -22,7 +22,9 @@ export default async function AdminDashboardPage() {
     Coach.countDocuments(),
     Enrollment.countDocuments(),
     Enrollment.countDocuments({ status: 'new' }),
-    TournamentComment.countDocuments(),
+    TournamentComment.countDocuments({ isDeleted: { $ne: true } }),
+    TournamentRegistration.countDocuments(),
+    TournamentRegistration.countDocuments({ status: 'pending' }),
   ]);
 
   const recentEnrollments = await Enrollment.find()
@@ -38,6 +40,8 @@ export default async function AdminDashboardPage() {
     { label: 'Тренеры', value: coachesCount, icon: Users, href: '/admin/coaches', color: 'bg-orange-500' },
     { label: 'Заявки', value: enrollmentsCount, icon: ClipboardList, href: '/admin/enrollments', color: 'bg-red-500',
       badge: newEnrollments > 0 ? newEnrollments : undefined },
+    { label: 'Турнирные заявки', value: tournamentRegistrationsCount, icon: ClipboardCheck, href: '/admin/tournament-registrations', color: 'bg-indigo-500',
+      badge: pendingTournamentRegistrations > 0 ? pendingTournamentRegistrations : undefined },
     { label: 'Комментарии', value: commentsCount, icon: MessageSquare, href: '/admin/comments', color: 'bg-pink-500' },
   ];
 

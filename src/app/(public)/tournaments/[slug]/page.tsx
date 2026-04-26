@@ -6,12 +6,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Tournament from '@/models/Tournament';
-import { TournamentComment, TournamentVisit } from '@/models/index';
+import { TournamentComment, TournamentRegistration, TournamentVisit } from '@/models/index';
 import { formatDate } from '@/lib/utils';
 import { Trophy, MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import ShareButton from '@/components/shared/ShareButton';
 import TournamentComments from '@/components/tournament/TournamentComments';
 import TournamentGallery from '@/components/tournament/TournamentGallery';
+import TournamentRegistrationActions from '@/components/tournament/TournamentRegistrationActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,9 +55,14 @@ export default async function TournamentDetailPage({ params }: Props) {
     } catch {}
   }
 
+  const currentRegistration = userId
+    ? await TournamentRegistration.findOne({ user: userId, tournament: tournament._id }).lean() as any
+    : null;
+
   const comments = await TournamentComment.find({
     tournament: tournament._id,
     isVisible: true,
+    isDeleted: { $ne: true },
   })
     .populate('user', 'name')
     .sort({ createdAt: -1 })
@@ -68,6 +74,12 @@ export default async function TournamentDetailPage({ params }: Props) {
     ongoing: 'Идёт',
     completed: 'Завершён',
   };
+  const tournamentDateLabel = tournament.endDate
+    ? `${formatDate(tournament.startDate)} — ${formatDate(tournament.endDate)}`
+    : formatDate(tournament.startDate);
+  const branchLabel = tournament.branch
+    ? `${tournament.branch.name}${tournament.branch.city ? `, ${tournament.branch.city}` : ''}`
+    : 'Не указан';
 
   return (
     <div className="min-h-screen bg-white">
@@ -115,6 +127,16 @@ export default async function TournamentDetailPage({ params }: Props) {
           )}
           <ShareButton url={`/tournaments/${params.slug}`} className="flex items-center gap-1.5 text-king-blue hover:underline ml-auto" />
         </div>
+
+        <TournamentRegistrationActions
+          tournamentId={tournament._id.toString()}
+          title={tournament.title}
+          dateLabel={tournamentDateLabel}
+          branchLabel={branchLabel}
+          isAuthenticated={Boolean(userId)}
+          isClosed={tournament.status === 'completed'}
+          initialStatus={currentRegistration?.status || null}
+        />
 
         {/* Description */}
         <div className="prose-king font-sans mb-10">
@@ -171,7 +193,7 @@ export default async function TournamentDetailPage({ params }: Props) {
           <TournamentComments
             tournamentId={tournament._id.toString()}
             initialComments={JSON.parse(JSON.stringify(comments))}
-            session={userId ? { id: userId, name: session?.user?.name || '' } : null}
+            session={userId ? { id: userId, name: session?.user?.name || '', role: session?.user?.role || 'user' } : null}
           />
         </div>
       </div>

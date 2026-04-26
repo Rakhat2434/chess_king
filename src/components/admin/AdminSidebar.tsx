@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
   Crown, LayoutDashboard, Newspaper, Trophy, MapPin,
-  Users, ClipboardList, MessageSquare, LogOut, Menu, X
+  Users, ClipboardList, MessageSquare, LogOut, Menu, X, ClipboardCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/admin', label: 'Дашборд', icon: LayoutDashboard, exact: true },
   { href: '/admin/news', label: 'Новости', icon: Newspaper },
   { href: '/admin/tournaments', label: 'Турниры', icon: Trophy },
+  { href: '/admin/tournament-registrations', label: 'Заявки на турниры', icon: ClipboardCheck },
   { href: '/admin/branches', label: 'Филиалы', icon: MapPin },
   { href: '/admin/coaches', label: 'Тренеры', icon: Users },
   { href: '/admin/enrollments', label: 'Заявки', icon: ClipboardList },

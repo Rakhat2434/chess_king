@@ -2,24 +2,30 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { formatDate, formatDateShort } from '@/lib/utils';
-import { BookOpen, MessageSquare, History, MapPin, Calendar, Clock, ExternalLink } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { BookOpen, Calendar, Clock, ExternalLink, MapPin, MessageSquare, Trophy } from 'lucide-react';
+import { cn, formatDate, formatDateShort } from '@/lib/utils';
 
 const tabs = [
   { id: 'enrollments', label: 'Мои записи', icon: BookOpen },
   { id: 'comments', label: 'Комментарии', icon: MessageSquare },
-  { id: 'visits', label: 'История', icon: History },
+  { id: 'tournaments', label: 'Мои турниры', icon: Trophy },
 ];
 
 interface Props {
   enrollments: any[];
   comments: any[];
-  visits: any[];
+  tournamentRegistrations: any[];
   statusLabel: Record<string, { label: string; color: string }>;
+  tournamentStatusLabel: Record<string, { label: string; color: string }>;
 }
 
-export default function DashboardTabs({ enrollments, comments, visits, statusLabel }: Props) {
+export default function DashboardTabs({
+  enrollments,
+  comments,
+  tournamentRegistrations,
+  statusLabel,
+  tournamentStatusLabel,
+}: Props) {
   const [active, setActive] = useState('enrollments');
 
   const levelLabel: Record<string, string> = {
@@ -30,7 +36,6 @@ export default function DashboardTabs({ enrollments, comments, visits, statusLab
 
   return (
     <div>
-      {/* Tab nav */}
       <div className="flex gap-1 bg-white rounded-2xl p-1.5 shadow-card mb-8 overflow-x-auto">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
@@ -50,11 +55,15 @@ export default function DashboardTabs({ enrollments, comments, visits, statusLab
                 {enrollments.length}
               </span>
             )}
+            {id === 'tournaments' && tournamentRegistrations.length > 0 && (
+              <span className={cn('text-xs px-2 py-0.5 rounded-full', active === id ? 'bg-white/20' : 'bg-gray-100')}>
+                {tournamentRegistrations.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      {/* Enrollments */}
       {active === 'enrollments' && (
         <div>
           {enrollments.length === 0 ? (
@@ -105,7 +114,6 @@ export default function DashboardTabs({ enrollments, comments, visits, statusLab
         </div>
       )}
 
-      {/* Comments */}
       {active === 'comments' && (
         <div>
           {comments.length === 0 ? (
@@ -133,7 +141,7 @@ export default function DashboardTabs({ enrollments, comments, visits, statusLab
                     </div>
                     <span className="text-xs text-king-gray flex-shrink-0">{formatDate(c.createdAt)}</span>
                   </div>
-                  <p className="text-king-navy text-sm leading-relaxed">{c.text}</p>
+                  <p className="text-king-navy text-sm leading-relaxed">{c.content || c.text}</p>
                 </div>
               ))}
             </div>
@@ -141,46 +149,68 @@ export default function DashboardTabs({ enrollments, comments, visits, statusLab
         </div>
       )}
 
-      {/* Visit History */}
-      {active === 'visits' && (
+      {active === 'tournaments' && (
         <div>
-          {visits.length === 0 ? (
+          {tournamentRegistrations.length === 0 ? (
             <EmptyState
-              icon={<History className="w-10 h-10 text-gray-200" />}
-              title="История пуста"
-              desc="Просматривайте турниры, и они появятся здесь"
+              icon={<Trophy className="w-10 h-10 text-gray-200" />}
+              title="Вы пока не зарегистрированы на турниры"
+              desc="Подайте заявку на странице турнира"
               cta={{ href: '/tournaments', label: 'Смотреть турниры' }}
             />
           ) : (
-            <div className="space-y-3">
-              {visits.map((v) => (
-                <div key={v._id} className="bg-white rounded-xl shadow-card p-5 flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    {v.tournament ? (
-                      <Link
-                        href={`/tournaments/${v.tournament.slug}`}
-                        className="font-medium text-king-navy hover:text-king-blue transition-colors flex items-center gap-1.5"
-                      >
-                        {v.tournament.title}
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </Link>
-                    ) : (
-                      <span className="text-king-gray">Турнир удалён</span>
-                    )}
-                    <p className="text-xs text-king-gray mt-1">{formatDate(v.visitedAt)}</p>
+            <div className="space-y-4">
+              {tournamentRegistrations.map((registration) => {
+                const t = registration.tournament;
+                const status = tournamentStatusLabel[registration.status] || {
+                  label: registration.status,
+                  color: 'bg-gray-100 text-gray-600',
+                };
+
+                return (
+                  <div key={registration._id} className="bg-white rounded-2xl shadow-card p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        {t ? (
+                          <Link
+                            href={`/tournaments/${t.slug}`}
+                            className="font-display font-semibold text-king-navy hover:text-king-blue transition-colors inline-flex items-center gap-1.5"
+                          >
+                            {t.title}
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
+                        ) : (
+                          <span className="font-display font-semibold text-king-gray">Турнир удалён</span>
+                        )}
+                        <div className="grid sm:grid-cols-3 gap-3 mt-4 text-sm text-king-gray">
+                          {t?.startDate && (
+                            <span className="flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-king-gold" />
+                              {formatDateShort(t.startDate)}
+                            </span>
+                          )}
+                          {t?.branch && (
+                            <span className="flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5 text-king-gold" />
+                              {t.branch.name}{t.branch.city ? `, ${t.branch.city}` : ''}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-king-gold" />
+                            Заявка: {formatDateShort(registration.createdAt)}
+                          </span>
+                        </div>
+                        {registration.adminNote && (
+                          <p className="text-xs text-king-gray mt-3 italic">&quot;{registration.adminNote}&quot;</p>
+                        )}
+                      </div>
+                      <span className={cn('px-3 py-1 rounded-full text-xs font-semibold', status.color)}>
+                        {status.label}
+                      </span>
+                    </div>
                   </div>
-                  {v.tournament && (
-                    <span className={
-                      v.tournament.status === 'ongoing' ? 'badge-ongoing' :
-                      v.tournament.status === 'upcoming' ? 'badge-upcoming' :
-                      'badge-completed text-xs'
-                    }>
-                      {v.tournament.status === 'ongoing' ? 'Идёт' :
-                       v.tournament.status === 'upcoming' ? 'Скоро' : 'Завершён'}
-                    </span>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

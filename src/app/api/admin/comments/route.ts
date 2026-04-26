@@ -12,14 +12,14 @@ export async function GET(req: NextRequest) {
   const { page, limit, skip } = parsePagination(searchParams, { defaultLimit: 30 });
 
   const [items, total] = await Promise.all([
-    TournamentComment.find()
+    TournamentComment.find({ isDeleted: { $ne: true } })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate('user', 'name email')
       .populate('tournament', 'title slug')
       .lean(),
-    TournamentComment.countDocuments(),
+    TournamentComment.countDocuments({ isDeleted: { $ne: true } }),
   ]);
   return NextResponse.json({ items, total, page, pages: Math.ceil(total / limit) });
 }
