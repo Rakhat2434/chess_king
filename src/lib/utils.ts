@@ -62,3 +62,50 @@ export function getShareUrl(path: string): string {
   const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://chessking.kz';
   return `${base}${path}`;
 }
+
+export function getGoogleMapsEmbedSrc(
+  mapEmbed?: string | null,
+  fallbackQueryParts: Array<string | null | undefined> = []
+): string | null {
+  const rawValue = mapEmbed?.trim();
+  const srcMatch = rawValue?.match(/\bsrc=["']([^"']+)["']/i);
+  const candidate = srcMatch?.[1] || rawValue;
+
+  if (candidate) {
+    const normalized = normalizeGoogleMapsEmbedUrl(candidate);
+    if (normalized) return normalized;
+  }
+
+  const fallbackQuery = fallbackQueryParts
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(', ');
+
+  if (!fallbackQuery) return null;
+
+  const fallbackUrl = new URL('https://www.google.com/maps');
+  fallbackUrl.searchParams.set('q', fallbackQuery);
+  fallbackUrl.searchParams.set('output', 'embed');
+  return fallbackUrl.toString();
+}
+
+function normalizeGoogleMapsEmbedUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.replace(/^www\./, '');
+    const isGoogleMapsHost = host === 'google.com' || host === 'maps.google.com';
+
+    if (url.protocol !== 'https:' || !isGoogleMapsHost) return null;
+
+    if (url.pathname.startsWith('/maps/embed')) return url.toString();
+
+    if (url.pathname === '/maps' && (url.searchParams.has('q') || url.searchParams.get('output') === 'embed')) {
+      url.searchParams.set('output', 'embed');
+      return url.toString();
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}

@@ -5,7 +5,7 @@ import connectDB from '@/lib/db';
 import Branch from '@/models/Branch';
 import Coach from '@/models/Coach';
 import { Clock, Map, MapPin, MessageCircle, Navigation, Phone, Sparkles, Users } from 'lucide-react';
-import { getWhatsAppUrl } from '@/lib/utils';
+import { getGoogleMapsEmbedSrc, getWhatsAppUrl } from '@/lib/utils';
 import Reveal from '@/components/shared/Reveal';
 
 export const dynamic = 'force-dynamic';
@@ -56,23 +56,26 @@ export default async function BranchesPage() {
 
         {branches.map((branch: any, index) => {
           const coaches = coachesByBranch[branch._id.toString()] || [];
+          const mapEmbedSrc = branch.mapEmbed
+            ? getGoogleMapsEmbedSrc(branch.mapEmbed, [branch.address, branch.city])
+            : null;
 
           return (
             <Reveal key={branch._id.toString()} delay={index * 0.05}>
               <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10">
                 <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
                   <div className="relative min-h-[280px] bg-[#0B1F3A] chess-bg lg:min-h-[430px]">
-                    {branch.mapEmbed ? (
+                    {branch.image ? (
+                      <Image src={branch.image} alt={branch.name} fill className="object-cover" />
+                    ) : mapEmbedSrc ? (
                       <iframe
-                        src={branch.mapEmbed}
+                        src={mapEmbedSrc}
                         className="absolute inset-0 h-full w-full border-0"
                         loading="lazy"
                         allowFullScreen
                         referrerPolicy="no-referrer-when-downgrade"
                         title={`Карта — ${branch.name}`}
                       />
-                    ) : branch.image ? (
-                      <Image src={branch.image} alt={branch.name} fill className="object-cover" />
                     ) : (
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
                         <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#F59E0B] shadow-xl shadow-amber-500/25">

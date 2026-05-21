@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, MapPin, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import { Plus, Pencil, Trash2, MapPin, X, Upload, ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Branch {
   _id: string; name: string; address: string; city: string;
   phone: string; schedule: string; isActive: boolean;
+  whatsapp?: string; mapEmbed?: string; mapUrl?: string; image?: string;
 }
 
-const empty = { name: '', address: '', city: 'Астана', phone: '', whatsapp: '', schedule: '', mapEmbed: '', mapUrl: '', isActive: true };
+const empty = { name: '', address: '', city: 'Астана', phone: '', whatsapp: '', schedule: '', mapEmbed: '', mapUrl: '', image: '', isActive: true };
 
 export default function AdminBranchesPage() {
   const [items, setItems] = useState<Branch[]>([]);
@@ -18,7 +20,9 @@ export default function AdminBranchesPage() {
   const [editing, setEditing] = useState<Branch | null>(null);
   const [form, setForm] = useState<any>(empty);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -31,8 +35,27 @@ export default function AdminBranchesPage() {
 
   useEffect(() => { fetchItems(); }, []);
 
-  const openCreate = () => { setEditing(null); setForm(empty); setModal(true); };
+  const openCreate = () => { setEditing(null); setForm({ ...empty }); setModal(true); };
   const openEdit = (item: Branch) => { setEditing(item); setForm({ ...empty, ...item }); setModal(true); };
+
+  const handleUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('folder', 'chessking/branches');
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error((await res.json()).error || 'Ошибка загрузки');
+      const data = await res.json();
+      setForm((f: any) => ({ ...f, image: data.url }));
+      toast.success('Фото загружено');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Ошибка загрузки');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
 
   const handleSave = async () => {
     if (!form.name || !form.address || !form.phone || !form.schedule) {
@@ -97,7 +120,20 @@ export default function AdminBranchesPage() {
               <tbody className="divide-y divide-gray-50">
                 {items.map(item => (
                   <tr key={item._id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-5 py-3 font-medium text-king-navy">{item.name}</td>
+                    <td className="px-5 py-3 font-medium text-king-navy">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-12 shrink-0 overflow-hidden rounded-lg bg-royal-100">
+                          {item.image ? (
+                            <Image src={item.image} alt={item.name} width={48} height={40} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-royal-300">
+                              <ImageIcon className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="min-w-0">{item.name}</span>
+                      </div>
+                    </td>
                     <td className="px-5 py-3 text-king-gray hidden md:table-cell">{item.address}</td>
                     <td className="px-5 py-3 text-king-gray hidden lg:table-cell">{item.phone}</td>
                     <td className="px-5 py-3">
@@ -139,6 +175,47 @@ export default function AdminBranchesPage() {
               <button onClick={() => setModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
             </div>
             <div className="p-6 space-y-4">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])}
+              />
+              <div>
+                <label className="label">Фото филиала</label>
+                <div className="mt-2 flex flex-col gap-4 rounded-xl border border-gray-100 bg-gray-50 p-3 sm:flex-row sm:items-center">
+                  <div className="relative h-28 w-full overflow-hidden rounded-xl bg-royal-100 sm:w-44">
+                    {form.image ? (
+                      <Image src={form.image} alt="" fill className="object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-royal-300">
+                        <ImageIcon className="h-9 w-9" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
+                      className="btn-outline px-4 py-2 text-sm"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {uploading ? 'Загрузка...' : 'Загрузить фото'}
+                    </button>
+                    {form.image && (
+                      <button
+                        type="button"
+                        onClick={() => setForm((f: any) => ({ ...f, image: '' }))}
+                        className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-red-500 transition-colors hover:bg-red-50"
+                      >
+                        Удалить фото
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="label">Название *</label>
