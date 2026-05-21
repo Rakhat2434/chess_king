@@ -85,6 +85,25 @@ export function getGoogleMapsEmbedSrc(
   return buildGoogleMapsSearchEmbedUrl(fallbackQuery);
 }
 
+export function getSafeGoogleMapsUrl(mapUrl?: string | null): string | null {
+  const candidate = decodeHtmlAttribute(mapUrl?.trim() || '');
+  if (!candidate) return null;
+
+  try {
+    const url = new URL(candidate);
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+
+    if (url.protocol !== 'https:') return null;
+    if (isGoogleMapsHost(url.hostname) || host === 'maps.app.goo.gl' || host === 'goo.gl') {
+      return url.toString();
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeGoogleMapsEmbedUrl(value: string, fallbackQuery: string): string | null {
   try {
     const url = new URL(value);

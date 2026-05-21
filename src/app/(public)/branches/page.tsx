@@ -5,7 +5,7 @@ import connectDB from '@/lib/db';
 import Branch from '@/models/Branch';
 import Coach from '@/models/Coach';
 import { Clock, Map, MapPin, MessageCircle, Navigation, Phone, Sparkles, Users } from 'lucide-react';
-import { getGoogleMapsEmbedSrc, getWhatsAppUrl } from '@/lib/utils';
+import { getGoogleMapsEmbedSrc, getSafeGoogleMapsUrl, getWhatsAppUrl } from '@/lib/utils';
 import Reveal from '@/components/shared/Reveal';
 
 export const dynamic = 'force-dynamic';
@@ -59,6 +59,7 @@ export default async function BranchesPage() {
           const mapEmbedSrc = branch.mapEmbed
             ? getGoogleMapsEmbedSrc(branch.mapEmbed, [branch.address, branch.city])
             : null;
+          const mapUrl = getSafeGoogleMapsUrl(branch.mapUrl);
 
           return (
             <Reveal key={branch._id.toString()} delay={index * 0.05}>
@@ -147,9 +148,9 @@ export default async function BranchesPage() {
                           WhatsApp
                         </a>
                       )}
-                      {branch.mapUrl && (
+                      {mapUrl && (
                         <a
-                          href={branch.mapUrl}
+                          href={mapUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-6 py-3 text-sm font-bold text-[#1D4ED8] transition-all hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-lg"

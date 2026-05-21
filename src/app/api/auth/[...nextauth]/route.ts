@@ -7,9 +7,9 @@ const handler = NextAuth(authOptions);
 export { handler as GET };
 
 export async function POST(req: NextRequest, context: { params: { nextauth: string[] } }) {
-  const limited = rateLimit(req, {
+  const limited = await rateLimit(req, {
     keyPrefix: 'auth:nextauth',
-    limit: 5,
+    limit: 30,
     windowMs: 15 * 60 * 1000,
   });
   if (limited) return limited;

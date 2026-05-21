@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-export { validatePasswordPolicy } from './validators';
+import { createHash } from 'node:crypto';
+import connectDB from './db';
+import RateLimit from '@/models/RateLimit';
 
-type RateLimitEntry = {
-  count: number;
-  resetAt: number;
-};
+export { validatePasswordPolicy } from './validators';
 
 type RateLimitOptions = {
   keyPrefix: string;
@@ -13,64 +12,107 @@ type RateLimitOptions = {
   identifier?: string;
 };
 
-declare global {
-  // eslint-disable-next-line no-var
-  var chesskingRateLimitStore: Map<string, RateLimitEntry> | undefined;
-}
-
-// In-memory rate limiting works for local development and small Vercel deployments.
-// For production-grade global limits, replace this store with Upstash Redis.
-const rateLimitStore = globalThis.chesskingRateLimitStore ?? new Map<string, RateLimitEntry>();
-
-if (!globalThis.chesskingRateLimitStore) {
-  globalThis.chesskingRateLimitStore = rateLimitStore;
-}
+type RateLimitResult = {
+  limited: boolean;
+  retryAfter: number;
+};
 
 export function getClientIp(req: NextRequest): string {
-  const forwardedFor = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-  const realIp = req.headers.get('x-real-ip')?.trim();
-  const vercelIp = req.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim();
-  const cfIp = req.headers.get('cf-connecting-ip')?.trim();
-
-  return forwardedFor || realIp || vercelIp || cfIp || 'unknown';
+  return getClientIpFromHeaders(req.headers);
 }
 
-export function rateLimit(req: NextRequest, options: RateLimitOptions): NextResponse | null {
-  const now = Date.now();
+export function getClientIpFromHeaders(
+  headers: Headers | Record<string, string | string[] | undefined> | undefined
+): string {
+  const getHeader = (name: string) => {
+    if (!headers) return undefined;
+    if (headers instanceof Headers) return headers.get(name) || undefined;
 
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (entry.resetAt <= now) {
-      rateLimitStore.delete(key);
+    const value = headers[name] || headers[name.toLowerCase()];
+    return Array.isArray(value) ? value[0] : value;
+  };
+
+  const vercelIp = getHeader('x-vercel-forwarded-for')?.split(',')[0]?.trim();
+  const cfIp = getHeader('cf-connecting-ip')?.trim();
+  const realIp = getHeader('x-real-ip')?.trim();
+  const forwardedFor = getHeader('x-forwarded-for')?.split(',')[0]?.trim();
+
+  return vercelIp || cfIp || realIp || forwardedFor || 'unknown';
+}
+
+export async function rateLimit(req: NextRequest, options: RateLimitOptions): Promise<NextResponse | null> {
+  const result = await checkRateLimit({
+    ...options,
+    identifier: options.identifier || getClientIp(req),
+  });
+
+  if (!result.limited) return null;
+
+  return NextResponse.json(
+    { error: 'Слишком много попыток. Попробуйте позже.' },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': String(result.retryAfter),
+      },
     }
-  }
+  );
+}
 
-  const identifier = options.identifier || getClientIp(req);
-  const key = `${options.keyPrefix}:${identifier}`;
-  const existing = rateLimitStore.get(key);
+export async function checkRateLimit(options: RateLimitOptions & { identifier: string }): Promise<RateLimitResult> {
+  const now = Date.now();
+  const nowDate = new Date(now);
+  const resetAt = new Date(now + options.windowMs);
+  const key = getRateLimitKey(options.keyPrefix, options.identifier);
 
-  if (!existing || existing.resetAt <= now) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + options.windowMs });
-    return null;
+  await connectDB();
+
+  const existing = await RateLimit.findOne({ key });
+
+  if (!existing || existing.resetAt.getTime() <= now) {
+    try {
+      await RateLimit.findOneAndUpdate(
+        { key },
+        { $set: { count: 1, resetAt } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    } catch (err: unknown) {
+      if (!(typeof err === 'object' && err && 'code' in err && err.code === 11000)) {
+        throw err;
+      }
+    }
+
+    return { limited: false, retryAfter: 0 };
   }
 
   if (existing.count >= options.limit) {
-    const retryAfter = Math.max(1, Math.ceil((existing.resetAt - now) / 1000));
-
-    return NextResponse.json(
-      { error: 'Слишком много попыток. Попробуйте позже.' },
-      {
-        status: 429,
-        headers: {
-          'Retry-After': String(retryAfter),
-        },
-      }
-    );
+    return {
+      limited: true,
+      retryAfter: Math.max(1, Math.ceil((existing.resetAt.getTime() - now) / 1000)),
+    };
   }
 
-  existing.count += 1;
-  return null;
+  const updated = await RateLimit.findOneAndUpdate(
+    { key, resetAt: { $gt: nowDate }, count: { $lt: options.limit } },
+    { $inc: { count: 1 } },
+    { new: true }
+  );
+
+  if (!updated) {
+    return {
+      limited: true,
+      retryAfter: Math.max(1, Math.ceil((existing.resetAt.getTime() - now) / 1000)),
+    };
+  }
+
+  return { limited: false, retryAfter: 0 };
 }
 
 export function isHoneypotFilled(value: unknown): boolean {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function getRateLimitKey(keyPrefix: string, identifier: string): string {
+  const digest = createHash('sha256').update(identifier).digest('hex');
+  return `${keyPrefix}:${digest}`;
 }

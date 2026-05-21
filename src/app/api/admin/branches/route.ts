@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Branch from '@/models/Branch';
 import { requireAdmin } from '@/lib/adminGuard';
-import { createSlug, getGoogleMapsEmbedSrc } from '@/lib/utils';
+import { createSlug, getGoogleMapsEmbedSrc, getSafeGoogleMapsUrl } from '@/lib/utils';
 import { getErrorMessage, jsonError } from '@/lib/api';
 
 export async function GET(req: NextRequest) {
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       typeof body.mapEmbed === 'string' && body.mapEmbed.trim()
         ? getGoogleMapsEmbedSrc(body.mapEmbed, [addressValue, cityValue])
         : undefined;
+    const mapUrl = typeof body.mapUrl === 'string' ? getSafeGoogleMapsUrl(body.mapUrl) : undefined;
 
     const branch = await Branch.create({
       name: name.trim(),
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
       phone: phone.trim(),
       whatsapp: typeof body.whatsapp === 'string' ? body.whatsapp.trim() : undefined,
       mapEmbed,
-      mapUrl: typeof body.mapUrl === 'string' ? body.mapUrl.trim() : undefined,
+      mapUrl: mapUrl || undefined,
       schedule: schedule.trim(),
       image: typeof body.image === 'string' ? body.image.trim() : undefined,
       isActive: body.isActive !== false,

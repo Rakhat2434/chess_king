@@ -12,7 +12,7 @@ const enrollmentStatuses = ['new', 'processing', 'confirmed', 'cancelled'];
 const levels = ['beginner', 'intermediate', 'advanced'];
 
 export async function POST(req: NextRequest) {
-  const limited = rateLimit(req, {
+  const limited = await rateLimit(req, {
     keyPrefix: 'enrollments',
     limit: 3,
     windowMs: 30 * 60 * 1000,

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!session) return jsonError('Требуется авторизация', 401);
     if (!isValidObjectId(params.id)) return jsonError('Некорректный id турнира', 400);
 
-    const limited = rateLimit(req, {
+    const limited = await rateLimit(req, {
       keyPrefix: 'comments',
       limit: 10,
       windowMs: 10 * 60 * 1000,

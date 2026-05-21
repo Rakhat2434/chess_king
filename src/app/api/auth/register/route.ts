@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
-import { getErrorMessage, jsonError } from '@/lib/api';
+import { jsonError } from '@/lib/api';
 import { isHoneypotFilled, rateLimit, validatePasswordPolicy } from '@/lib/security';
 import { normalizeEmailAddress, normalizeKazakhstanPhone } from '@/lib/validators';
 
@@ -44,7 +44,7 @@ const registerSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const limited = rateLimit(req, {
+  const limited = await rateLimit(req, {
     keyPrefix: 'auth:register',
     limit: 5,
     windowMs: 15 * 60 * 1000,
@@ -103,6 +103,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ id: user._id.toString(), name: user.name, email: user.email }, { status: 201 });
   } catch (err: unknown) {
     console.error('Register error:', err);
-    return jsonError(getErrorMessage(err), 500);
+    return jsonError('Ошибка сервера', 500);
   }
 }
