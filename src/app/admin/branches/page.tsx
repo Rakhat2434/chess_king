@@ -239,8 +239,8 @@ export default function AdminBranchesPage() {
                 </div>
                 <div className="col-span-2">
                   <label className="label">Google Maps Embed URL</label>
-                  <input value={form.mapEmbed} onChange={f('mapEmbed')} className="input" placeholder="https://maps.google.com/maps?..." />
-                  <p className="text-xs text-gray-400 mt-1">Google Maps → Поделиться → Встроить карту → URL из src=&quot;...&quot;</p>
+                  <input value={form.mapEmbed} onChange={f('mapEmbed')} className="input" placeholder="https://www.google.com/maps/place/..." />
+                  <p className="text-xs text-gray-400 mt-1">Можно вставить обычную ссылку Google Maps, embed URL или весь iframe. Сайт сам подготовит безопасную ссылку для карты.</p>
                 </div>
                 <div className="col-span-2">
                   <label className="label">Ссылка на карту</label>

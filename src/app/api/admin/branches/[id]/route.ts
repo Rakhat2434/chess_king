@@ -5,7 +5,7 @@ import Coach from '@/models/Coach';
 import Tournament from '@/models/Tournament';
 import { Enrollment } from '@/models/index';
 import { requireAdmin } from '@/lib/adminGuard';
-import { createSlug } from '@/lib/utils';
+import { createSlug, getGoogleMapsEmbedSrc } from '@/lib/utils';
 import { getErrorMessage, isValidObjectId, jsonError } from '@/lib/api';
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
@@ -57,7 +57,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
     if (typeof body.mapEmbed === 'string') {
       const mapEmbed = body.mapEmbed.trim();
-      if (mapEmbed) update.mapEmbed = mapEmbed;
+      if (mapEmbed) {
+        update.mapEmbed = getGoogleMapsEmbedSrc(mapEmbed, [
+          typeof update.address === 'string' ? update.address : existing.address,
+          typeof update.city === 'string' ? update.city : existing.city,
+        ]);
+      }
       else unset.mapEmbed = '';
     }
     if (typeof body.mapUrl === 'string') {

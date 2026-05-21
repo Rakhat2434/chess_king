@@ -69,33 +69,27 @@ export function getGoogleMapsEmbedSrc(
 ): string | null {
   const rawValue = mapEmbed?.trim();
   const srcMatch = rawValue?.match(/\bsrc=["']([^"']+)["']/i);
-  const candidate = srcMatch?.[1] || rawValue;
-
-  if (candidate) {
-    const normalized = normalizeGoogleMapsEmbedUrl(candidate);
-    if (normalized) return normalized;
-  }
-
+  const candidate = decodeHtmlAttribute(srcMatch?.[1] || rawValue || '');
   const fallbackQuery = fallbackQueryParts
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(', ');
 
+  if (candidate) {
+    const normalized = normalizeGoogleMapsEmbedUrl(candidate, fallbackQuery);
+    if (normalized) return normalized;
+  }
+
   if (!fallbackQuery) return null;
 
-  const fallbackUrl = new URL('https://www.google.com/maps');
-  fallbackUrl.searchParams.set('q', fallbackQuery);
-  fallbackUrl.searchParams.set('output', 'embed');
-  return fallbackUrl.toString();
+  return buildGoogleMapsSearchEmbedUrl(fallbackQuery);
 }
 
-function normalizeGoogleMapsEmbedUrl(value: string): string | null {
+function normalizeGoogleMapsEmbedUrl(value: string, fallbackQuery: string): string | null {
   try {
     const url = new URL(value);
-    const host = url.hostname.replace(/^www\./, '');
-    const isGoogleMapsHost = host === 'google.com' || host === 'maps.google.com';
 
-    if (url.protocol !== 'https:' || !isGoogleMapsHost) return null;
+    if (url.protocol !== 'https:' || !isGoogleMapsHost(url.hostname)) return null;
 
     if (url.pathname.startsWith('/maps/embed')) return url.toString();
 
@@ -104,8 +98,58 @@ function normalizeGoogleMapsEmbedUrl(value: string): string | null {
       return url.toString();
     }
 
-    return null;
+    const query =
+      url.searchParams.get('q') ||
+      url.searchParams.get('query') ||
+      getGoogleMapsPathQuery(url) ||
+      getGoogleMapsCoordinateQuery(value) ||
+      fallbackQuery;
+
+    return query ? buildGoogleMapsSearchEmbedUrl(query) : null;
   } catch {
     return null;
   }
+}
+
+function decodeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+function isGoogleMapsHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^www\./, '');
+  return /^(maps\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(host);
+}
+
+function getGoogleMapsPathQuery(url: URL): string | null {
+  const parts = url.pathname.split('/').filter(Boolean);
+  const querySegmentIndex = parts.findIndex((part) => part === 'place' || part === 'search');
+  const querySegment = querySegmentIndex >= 0 ? parts[querySegmentIndex + 1] : null;
+
+  if (!querySegment) return null;
+
+  try {
+    return decodeURIComponent(querySegment.replace(/\+/g, ' '));
+  } catch {
+    return querySegment.replace(/\+/g, ' ');
+  }
+}
+
+function getGoogleMapsCoordinateQuery(value: string): string | null {
+  const dataCoordinates = value.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if (dataCoordinates) return `${dataCoordinates[1]},${dataCoordinates[2]}`;
+
+  const atCoordinates = value.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:,|\/|$)/);
+  if (atCoordinates) return `${atCoordinates[1]},${atCoordinates[2]}`;
+
+  return null;
+}
+
+function buildGoogleMapsSearchEmbedUrl(query: string): string {
+  const fallbackUrl = new URL('https://www.google.com/maps');
+  fallbackUrl.searchParams.set('q', query);
+  fallbackUrl.searchParams.set('output', 'embed');
+  return fallbackUrl.toString();
 }
