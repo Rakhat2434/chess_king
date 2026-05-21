@@ -39,9 +39,9 @@ export default async function CoachesPage() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {coaches.map((coach: any) => (
-            <div key={coach._id.toString()} className="card group">
+            <div key={coach._id.toString()} className="card group flex h-full flex-col">
               {/* Photo */}
-              <div className="relative h-64 bg-gradient-to-br from-royal-100 to-royal-200 overflow-hidden">
+              <div className="relative h-64 shrink-0 bg-gradient-to-br from-royal-100 to-royal-200 overflow-hidden">
                 {coach.photo ? (
                   <Image
                     src={coach.photo}
@@ -61,7 +61,7 @@ export default async function CoachesPage() {
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="flex flex-1 flex-col p-6">
                 <h2 className="font-display text-lg font-bold text-king-navy mb-1">{coach.name}</h2>
                 {coach.branch && (
                   <p className="text-xs text-king-gray flex items-center gap-1 mb-3">
@@ -96,7 +96,7 @@ export default async function CoachesPage() {
 
                 <Link
                   href={`/enroll?coach=${coach._id.toString()}&branch=${coach.branch?._id || ''}`}
-                  className="btn-primary w-full justify-center text-sm py-2.5"
+                  className="btn-primary mt-auto w-full justify-center text-sm py-2.5"
                 >
                   Записаться к тренеру
                 </Link>
