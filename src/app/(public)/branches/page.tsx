@@ -24,7 +24,9 @@ export default async function BranchesPage() {
     coachesByBranch[branch._id.toString()] = await Coach.find({
       branch: branch._id,
       isActive: true,
-    }).lean();
+    })
+      .sort({ order: 1, createdAt: 1 })
+      .lean();
   }
 
   return (
