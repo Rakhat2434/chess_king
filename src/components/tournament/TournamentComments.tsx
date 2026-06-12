@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { formatDate } from '@/lib/utils';
 import { MessageSquare, Send, LogIn, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { useTranslation } from '@/components/providers/LanguageProvider';
+import LocalizedDate from '@/components/i18n/LocalizedDate';
+import DynamicText from '@/components/i18n/DynamicText';
 
 interface Comment {
   _id: string;
@@ -21,6 +23,7 @@ interface Props {
 }
 
 export default function TournamentComments({ tournamentId, initialComments, session }: Props) {
+  const { t, message } = useTranslation();
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [text, setText] = useState('');
   const [website, setWebsite] = useState('');
@@ -39,21 +42,21 @@ export default function TournamentComments({ tournamentId, initialComments, sess
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Ошибка');
+        throw new Error(err.error || t('common.genericError'));
       }
       const newComment = await res.json();
       if (newComment?.skipped) {
         setText('');
         setWebsite('');
-        toast.success('Комментарий добавлен');
+        toast.success(t('tournamentComments.addSuccess'));
         return;
       }
       setComments([newComment, ...comments]);
       setText('');
       setWebsite('');
-      toast.success('Комментарий добавлен');
+      toast.success(t('tournamentComments.addSuccess'));
     } catch (err: any) {
-      toast.error(err.message || 'Не удалось добавить комментарий');
+      toast.error(message(err.message || t('tournamentComments.addFail')));
     } finally {
       setLoading(false);
     }
@@ -66,12 +69,12 @@ export default function TournamentComments({ tournamentId, initialComments, sess
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Ошибка удаления');
+        throw new Error(err.error || t('common.deleteError'));
       }
       setComments(comments.filter(comment => comment._id !== commentId));
-      toast.success('Комментарий удален');
+      toast.success(t('tournamentComments.deleteSuccess'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось удалить комментарий');
+      toast.error(err instanceof Error ? message(err.message) : t('tournamentComments.deleteFail'));
     } finally {
       setDeleteConfirm(null);
     }
@@ -93,12 +96,12 @@ export default function TournamentComments({ tournamentId, initialComments, sess
               aria-hidden="true"
             />
             <p className="text-sm text-king-gray mb-3">
-              Комментируете как <span className="font-semibold text-king-navy">{session.name}</span>
+              {t('tournamentComments.as', { name: session.name })}
             </p>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Ваш комментарий..."
+              placeholder={t('tournamentComments.placeholder')}
               rows={3}
               maxLength={1000}
               className="input resize-none bg-white"
@@ -108,7 +111,7 @@ export default function TournamentComments({ tournamentId, initialComments, sess
               <span className="text-xs text-gray-400">{text.length}/1000</span>
               <button type="submit" disabled={loading || !text.trim()} className="btn-primary py-2.5 px-5 text-sm">
                 <Send className="w-4 h-4" />
-                {loading ? 'Отправка...' : 'Отправить'}
+                {loading ? t('common.sending') : t('tournamentComments.submit')}
               </button>
             </div>
           </div>
@@ -116,10 +119,10 @@ export default function TournamentComments({ tournamentId, initialComments, sess
       ) : (
         <div className="mb-8 p-5 bg-blue-50 rounded-2xl border border-blue-100 text-center">
           <MessageSquare className="w-8 h-8 text-blue-300 mx-auto mb-2" />
-          <p className="text-king-navy font-medium mb-3">Войдите, чтобы оставить комментарий</p>
+          <p className="text-king-navy font-medium mb-3">{t('tournamentComments.loginPrompt')}</p>
           <Link href="/login" className="btn-primary py-2.5 px-5 text-sm inline-flex">
             <LogIn className="w-4 h-4" />
-            Войти
+            {t('nav.login')}
           </Link>
         </div>
       )}
@@ -128,7 +131,7 @@ export default function TournamentComments({ tournamentId, initialComments, sess
       {comments.length === 0 ? (
         <div className="text-center py-10 text-king-gray">
           <MessageSquare className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-          <p>Комментариев пока нет. Будьте первым!</p>
+          <p>{t('tournamentComments.empty')}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -141,23 +144,25 @@ export default function TournamentComments({ tournamentId, initialComments, sess
                   <div className="w-8 h-8 bg-royal-100 rounded-full flex items-center justify-center text-king-blue font-bold text-sm">
                     {c.user?.name?.[0]?.toUpperCase() || '?'}
                   </div>
-                  <span className="font-semibold text-king-navy text-sm">{c.user?.name || 'Пользователь'}</span>
+                  <span className="font-semibold text-king-navy text-sm">{c.user?.name || t('common.user')}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-king-gray">{formatDate(c.createdAt)}</span>
+                  <span className="text-xs text-king-gray"><LocalizedDate value={c.createdAt} /></span>
                   {canDelete && (
                     <button
                       type="button"
                       onClick={() => setDeleteConfirm(c._id)}
                       className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
-                      title="Удалить комментарий"
+                      title={t('tournamentComments.deleteTooltip')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
               </div>
-              <p className="text-king-navy text-sm leading-relaxed pl-10">{c.content || c.text}</p>
+              <p className="text-king-navy text-sm leading-relaxed pl-10">
+                <DynamicText text={c.content || c.text} cacheKey={`comment-${c._id}`} />
+              </p>
             </div>
           );
           })}
@@ -167,11 +172,11 @@ export default function TournamentComments({ tournamentId, initialComments, sess
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-            <h3 className="font-display text-lg font-bold text-king-navy mb-2">Удалить комментарий?</h3>
-            <p className="text-sm text-king-gray">Комментарий исчезнет из публичного списка.</p>
+            <h3 className="font-display text-lg font-bold text-king-navy mb-2">{t('tournamentComments.deleteTitle')}</h3>
+            <p className="text-sm text-king-gray">{t('tournamentComments.deleteText')}</p>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setDeleteConfirm(null)} className="btn-outline flex-1 py-2.5 text-sm">Отмена</button>
-              <button onClick={() => deleteComment(deleteConfirm)} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold">Удалить</button>
+              <button onClick={() => setDeleteConfirm(null)} className="btn-outline flex-1 py-2.5 text-sm">{t('common.cancel')}</button>
+              <button onClick={() => deleteComment(deleteConfirm)} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold">{t('common.delete')}</button>
             </div>
           </div>
         </div>

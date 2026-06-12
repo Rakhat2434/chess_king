@@ -3,12 +3,15 @@ import { Phone, MessageCircle, Instagram, Mail, MapPin, Clock } from 'lucide-rea
 import { DISPLAY_PHONE, getWhatsAppUrl, INSTAGRAM_HANDLE, INSTAGRAM_URL, PHONE_HREF } from '@/lib/utils';
 import connectDB from '@/lib/db';
 import Branch from '@/models/Branch';
+import { translate } from '@/lib/i18n';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Контакты',
-  description: 'Контакты шахматной академии ChessKing',
+  title: translate('ru', 'contact.metaTitle'),
+  description: translate('ru', 'contact.metaDescription'),
 };
 
 export default async function ContactPage() {
@@ -19,9 +22,9 @@ export default async function ContactPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-royal-gradient chess-bg py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-king-gold font-semibold text-sm uppercase tracking-widest mb-3">Свяжитесь с нами</p>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">Контакты</h1>
-          <p className="text-gray-300 text-lg">Мы всегда рады ответить на ваши вопросы</p>
+          <p className="text-king-gold font-semibold text-sm uppercase tracking-widest mb-3"><T k="contact.badge" /></p>
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4"><T k="contact.title" /></h1>
+          <p className="text-gray-300 text-lg"><T k="contact.subtitle" /></p>
         </div>
       </div>
 
@@ -29,34 +32,34 @@ export default async function ContactPage() {
         <div className="grid lg:grid-cols-2 gap-10">
           {/* Contact methods */}
           <div>
-            <h2 className="font-display text-2xl font-bold text-king-navy mb-6">Как с нами связаться</h2>
+            <h2 className="font-display text-2xl font-bold text-king-navy mb-6"><T k="contact.methodsTitle" /></h2>
             <div className="space-y-4">
               {[
                 {
                   icon: Phone, color: 'bg-blue-50 text-blue-600',
-                  label: 'Телефон', value: DISPLAY_PHONE,
+                  labelKey: 'common.phone', value: DISPLAY_PHONE,
                   href: PHONE_HREF,
                 },
                 {
                   icon: MessageCircle, color: 'bg-green-50 text-green-600',
-                  label: 'WhatsApp', value: 'Написать в WhatsApp',
-                  href: getWhatsAppUrl('Здравствуйте! Хочу узнать о ChessKing'),
+                  labelKey: 'common.whatsapp', valueKey: 'contact.writeWhatsapp',
+                  href: getWhatsAppUrl(translate('ru', 'whatsappMessages.contact')),
                   external: true,
                 },
                 {
                   icon: Instagram, color: 'bg-pink-50 text-pink-600',
-                  label: 'Instagram', value: INSTAGRAM_HANDLE,
+                  labelKey: 'common.instagram', value: INSTAGRAM_HANDLE,
                   href: INSTAGRAM_URL,
                   external: true,
                 },
                 {
                   icon: Mail, color: 'bg-purple-50 text-purple-600',
-                  label: 'Email', value: 'info@chessking.kz',
+                  labelKey: 'common.email', value: 'info@chessking.kz',
                   href: 'mailto:info@chessking.kz',
                 },
-              ].map(({ icon: Icon, color, label, value, href, external }) => (
+              ].map(({ icon: Icon, color, labelKey, value, valueKey, href, external }) => (
                 <a
-                  key={label}
+                  key={labelKey}
                   href={href}
                   target={external ? '_blank' : undefined}
                   rel={external ? 'noopener noreferrer' : undefined}
@@ -66,8 +69,8 @@ export default async function ContactPage() {
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-xs text-king-gray font-semibold uppercase tracking-widest mb-0.5">{label}</p>
-                    <p className="font-medium text-king-navy">{value}</p>
+                    <p className="text-xs text-king-gray font-semibold uppercase tracking-widest mb-0.5"><T k={labelKey} /></p>
+                    <p className="font-medium text-king-navy">{valueKey ? <T k={valueKey} /> : value}</p>
                   </div>
                 </a>
               ))}
@@ -76,15 +79,17 @@ export default async function ContactPage() {
 
           {/* Branches */}
           <div>
-            <h2 className="font-display text-2xl font-bold text-king-navy mb-6">Наши адреса</h2>
+            <h2 className="font-display text-2xl font-bold text-king-navy mb-6"><T k="contact.addressesTitle" /></h2>
             <div className="space-y-4">
               {branches.map((b: any) => (
                 <div key={b._id.toString()} className="bg-white rounded-2xl shadow-card p-6">
-                  <h3 className="font-display font-bold text-king-navy mb-3">{b.name}</h3>
+                  <h3 className="font-display font-bold text-king-navy mb-3">
+                    <DynamicText text={b.name} cacheKey={`branch-name-${b._id}`} />
+                  </h3>
                   <div className="space-y-2 text-sm text-king-gray">
                     <p className="flex items-start gap-2">
                       <MapPin className="w-4 h-4 text-king-gold mt-0.5 flex-shrink-0" />
-                      {b.address}, {b.city}
+                      <DynamicText text={`${b.address}, ${b.city}`} cacheKey={`branch-full-address-${b._id}`} />
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-king-gold flex-shrink-0" />
@@ -92,14 +97,14 @@ export default async function ContactPage() {
                     </p>
                     <p className="flex items-start gap-2">
                       <Clock className="w-4 h-4 text-king-gold mt-0.5 flex-shrink-0" />
-                      {b.schedule}
+                      <DynamicText text={b.schedule} cacheKey={`branch-schedule-${b._id}`} />
                     </p>
                   </div>
                 </div>
               ))}
               {branches.length === 0 && (
                 <div className="bg-white rounded-2xl shadow-card p-6 text-center text-king-gray">
-                  <p>Адреса появятся скоро</p>
+                  <p><T k="contact.addressesEmpty" /></p>
                 </div>
               )}
             </div>
@@ -108,11 +113,11 @@ export default async function ContactPage() {
 
         {/* CTA */}
         <div className="mt-14 bg-royal-gradient chess-bg rounded-3xl p-10 text-center">
-          <h2 className="font-display text-3xl font-bold text-white mb-3">Готовы начать?</h2>
-          <p className="text-gray-300 mb-8">Запишитесь на бесплатное пробное занятие прямо сейчас</p>
+          <h2 className="font-display text-3xl font-bold text-white mb-3"><T k="contact.ctaTitle" /></h2>
+          <p className="text-gray-300 mb-8"><T k="contact.ctaText" /></p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="/enroll" className="btn-gold text-base px-8 py-3.5">
-              Записаться на урок
+              <T k="contact.ctaButton" />
             </a>
             <a
               href={getWhatsAppUrl()}

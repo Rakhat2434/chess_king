@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { Plus, Pencil, Trash2, Upload, X, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 
 interface Branch { _id: string; name: string }
 interface Coach {
@@ -17,6 +18,7 @@ const empty: any = {
 };
 
 export default function AdminCoachesPage() {
+  const { t, message } = useTranslation();
   const [items, setItems] = useState<Coach[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,17 +30,17 @@ export default function AdminCoachesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
       const [cRes, bRes] = await Promise.all([fetch('/api/admin/coaches'), fetch('/api/admin/branches')]);
       setItems(await cRes.json());
       setBranches(await bRes.json());
-    } catch { toast.error('Ошибка загрузки'); }
+    } catch { toast.error(t('common.loadingError')); }
     finally { setLoading(false); }
-  };
+  }, [t]);
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const openCreate = () => { setEditing(null); setForm(empty); setModal(true); };
   const openEdit = (item: any) => {
@@ -60,14 +62,14 @@ export default function AdminCoachesPage() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setForm((f: any) => ({ ...f, photo: data.url }));
-      toast.success('Фото загружено');
-    } catch { toast.error('Ошибка загрузки'); }
+      toast.success(t('admin.photoUploaded'));
+    } catch { toast.error(t('common.loadingError')); }
     finally { setUploading(false); }
   };
 
   const handleSave = async () => {
     if (!form.name || !form.title || !form.bio || !form.branch) {
-      toast.error('Заполните обязательные поля'); return;
+      toast.error(t('common.fillRequired')); return;
     }
     setSaving(true);
     try {
@@ -81,20 +83,20 @@ export default function AdminCoachesPage() {
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error((await res.json()).error);
-      toast.success(editing ? 'Обновлено' : 'Создано');
+      toast.success(editing ? t('common.updated') : t('common.created'));
       setModal(false);
       fetchAll();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(message(err.message)); }
     finally { setSaving(false); }
   };
 
   const handleDelete = async (id: string) => {
     try {
       const res = await fetch(`/api/admin/coaches/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error((await res.json()).error || 'Ошибка удаления');
-      toast.success('Удалено');
+      if (!res.ok) throw new Error((await res.json()).error || t('common.deleteError'));
+      toast.success(t('common.deleted'));
       setItems(items.filter(i => i._id !== id));
-    } catch (err) { toast.error(err instanceof Error ? err.message : 'Ошибка'); }
+    } catch (err) { toast.error(err instanceof Error ? message(err.message) : t('common.genericError')); }
     finally { setDeleteConfirm(null); }
   };
 
@@ -104,11 +106,11 @@ export default function AdminCoachesPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold text-king-navy">Тренеры</h1>
-          <p className="text-king-gray text-sm mt-1">{items.length} тренеров</p>
+          <h1 className="font-display text-2xl font-bold text-king-navy">{t('admin.coaches')}</h1>
+          <p className="text-king-gray text-sm mt-1">{t('admin.coachesCount', { count: items.length })}</p>
         </div>
         <button onClick={openCreate} className="btn-primary py-2.5 px-5 text-sm">
-          <Plus className="w-4 h-4" /> Добавить тренера
+          <Plus className="w-4 h-4" /> {t('admin.addCoach')}
         </button>
       </div>
 
@@ -117,7 +119,7 @@ export default function AdminCoachesPage() {
         : items.length === 0 ? (
           <div className="col-span-3 text-center py-16 text-king-gray bg-white rounded-2xl shadow-card">
             <User className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-            <p>Тренеров нет</p>
+            <p>{t('admin.noCoaches')}</p>
           </div>
         ) : items.map(item => (
           <div key={item._id} className="bg-white rounded-2xl shadow-card p-5 flex gap-4">
@@ -134,7 +136,7 @@ export default function AdminCoachesPage() {
               <p className="font-display font-semibold text-king-navy text-sm">{item.name}</p>
               <p className="text-king-gold text-xs">{item.title}</p>
               <p className="text-king-gray text-xs mt-0.5">{item.branch?.name}</p>
-              <p className="text-king-gray text-xs">{item.experience} лет опыта</p>
+              <p className="text-king-gray text-xs">{t('common.yearsExperience', { count: item.experience })}</p>
             </div>
             <div className="flex flex-col gap-1 flex-shrink-0">
               <button onClick={() => openEdit(item)} className="p-1.5 hover:bg-blue-50 rounded-lg text-king-blue transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
@@ -147,10 +149,10 @@ export default function AdminCoachesPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-            <h3 className="font-display text-lg font-bold text-king-navy mb-2">Удалить тренера?</h3>
+            <h3 className="font-display text-lg font-bold text-king-navy mb-2">{t('admin.deleteCoachTitle')}</h3>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setDeleteConfirm(null)} className="btn-outline flex-1 py-2.5 text-sm">Отмена</button>
-              <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold">Удалить</button>
+              <button onClick={() => setDeleteConfirm(null)} className="btn-outline flex-1 py-2.5 text-sm">{t('common.cancel')}</button>
+              <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold">{t('common.delete')}</button>
             </div>
           </div>
         </div>
@@ -160,7 +162,7 @@ export default function AdminCoachesPage() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl w-full max-w-xl my-8 shadow-2xl">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="font-display text-xl font-bold text-king-navy">{editing ? 'Редактировать тренера' : 'Новый тренер'}</h2>
+              <h2 className="font-display text-xl font-bold text-king-navy">{editing ? t('admin.editCoach') : t('admin.newCoach')}</h2>
               <button onClick={() => setModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
             </div>
             <div className="p-6 space-y-4">
@@ -176,39 +178,39 @@ export default function AdminCoachesPage() {
                 <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
                   className="btn-outline text-sm py-2 px-4">
                   <Upload className="w-4 h-4" />
-                  {uploading ? 'Загрузка...' : 'Загрузить фото'}
+                  {uploading ? t('common.uploading') : t('admin.uploadPhoto')}
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="col-span-2"><label className="label">Имя *</label><input value={form.name} onChange={f('name')} className="input" /></div>
-                <div><label className="label">Звание/должность *</label><input value={form.title} onChange={f('title')} className="input" placeholder="Международный мастер" /></div>
-                <div><label className="label">Опыт (лет) *</label><input type="number" min={0} value={form.experience} onChange={f('experience')} className="input" /></div>
-                <div className="col-span-2"><label className="label">Биография *</label><textarea value={form.bio} onChange={f('bio')} rows={4} className="input resize-none" /></div>
+                <div className="col-span-2"><label className="label">{t('admin.coachNameRequired')}</label><input value={form.name} onChange={f('name')} className="input" /></div>
+                <div><label className="label">{t('admin.coachTitleRequired')}</label><input value={form.title} onChange={f('title')} className="input" placeholder={t('admin.coachTitlePlaceholder')} /></div>
+                <div><label className="label">{t('admin.experienceRequired')}</label><input type="number" min={0} value={form.experience} onChange={f('experience')} className="input" /></div>
+                <div className="col-span-2"><label className="label">{t('admin.bioRequired')}</label><textarea value={form.bio} onChange={f('bio')} rows={4} className="input resize-none" /></div>
                 <div className="col-span-2">
-                  <label className="label">Достижения (каждое с новой строки)</label>
-                  <textarea value={form.achievements} onChange={f('achievements')} rows={3} className="input resize-none text-sm" placeholder="1-й чемпионат Казахстана 2020&#10;Мастер ФИДЕ 2018" />
+                  <label className="label">{t('admin.achievementsLines')}</label>
+                  <textarea value={form.achievements} onChange={f('achievements')} rows={3} className="input resize-none text-sm" placeholder={t('admin.achievementsPlaceholder')} />
                 </div>
                 <div className="col-span-2">
-                  <label className="label">Специализация (через запятую)</label>
-                  <input value={form.specialization} onChange={f('specialization')} className="input" placeholder="Дети, Эндшпиль, Дебют" />
+                  <label className="label">{t('admin.specialization')}</label>
+                  <input value={form.specialization} onChange={f('specialization')} className="input" placeholder={t('admin.specializationPlaceholder')} />
                 </div>
                 <div>
-                  <label className="label">Филиал *</label>
+                  <label className="label">{t('enrollForm.branch')}</label>
                   <select value={form.branch} onChange={f('branch')} className="input">
-                    <option value="">Выберите</option>
+                    <option value="">{t('admin.select')}</option>
                     {branches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
                   </select>
                 </div>
-                <div><label className="label">Порядок</label><input type="number" value={form.order} onChange={f('order')} className="input" /></div>
+                <div><label className="label">{t('admin.order')}</label><input type="number" value={form.order} onChange={f('order')} className="input" /></div>
               </div>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={form.isActive} onChange={f('isActive')} className="w-4 h-4 accent-king-blue" />
-                <span className="text-sm font-medium text-king-navy">Активен</span>
+                <span className="text-sm font-medium text-king-navy">{t('admin.active')}</span>
               </label>
             </div>
             <div className="flex gap-3 p-6 border-t border-gray-100">
-              <button onClick={() => setModal(false)} className="btn-outline flex-1 py-2.5 text-sm">Отмена</button>
-              <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 py-2.5 text-sm">{saving ? 'Сохранение...' : editing ? 'Сохранить' : 'Создать'}</button>
+              <button onClick={() => setModal(false)} className="btn-outline flex-1 py-2.5 text-sm">{t('common.cancel')}</button>
+              <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 py-2.5 text-sm">{saving ? t('common.saving') : editing ? t('common.save') : t('common.create')}</button>
             </div>
           </div>
         </div>

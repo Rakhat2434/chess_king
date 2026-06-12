@@ -3,41 +3,56 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, Calendar, Clock, ExternalLink, MapPin, MessageSquare, Trophy } from 'lucide-react';
-import { cn, formatDate, formatDateShort } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/components/providers/LanguageProvider';
+import LocalizedDate from '@/components/i18n/LocalizedDate';
+import DynamicText from '@/components/i18n/DynamicText';
 
 const tabs = [
-  { id: 'enrollments', label: 'Мои записи', icon: BookOpen },
-  { id: 'comments', label: 'Комментарии', icon: MessageSquare },
-  { id: 'tournaments', label: 'Мои турниры', icon: Trophy },
+  { id: 'enrollments', labelKey: 'dashboard.tabEnrollments', icon: BookOpen },
+  { id: 'comments', labelKey: 'dashboard.tabComments', icon: MessageSquare },
+  { id: 'tournaments', labelKey: 'dashboard.tabTournaments', icon: Trophy },
 ];
 
 interface Props {
   enrollments: any[];
   comments: any[];
   tournamentRegistrations: any[];
-  statusLabel: Record<string, { label: string; color: string }>;
-  tournamentStatusLabel: Record<string, { label: string; color: string }>;
 }
 
 export default function DashboardTabs({
   enrollments,
   comments,
   tournamentRegistrations,
-  statusLabel,
-  tournamentStatusLabel,
 }: Props) {
+  const { t } = useTranslation();
   const [active, setActive] = useState('enrollments');
 
+  const statusLabel: Record<string, { labelKey: string; color: string }> = {
+    new: { labelKey: 'dashboard.statusNew', color: 'bg-blue-100 text-blue-700' },
+    processing: { labelKey: 'dashboard.statusProcessing', color: 'bg-yellow-100 text-yellow-700' },
+    confirmed: { labelKey: 'dashboard.statusConfirmed', color: 'bg-green-100 text-green-700' },
+    cancelled: { labelKey: 'dashboard.statusCancelled', color: 'bg-red-100 text-red-700' },
+  };
+
+  const tournamentStatusLabel: Record<string, { labelKey: string; color: string }> = {
+    pending: { labelKey: 'dashboard.tournamentPending', color: 'bg-yellow-100 text-yellow-700' },
+    approved: { labelKey: 'dashboard.tournamentApproved', color: 'bg-green-100 text-green-700' },
+    rejected: { labelKey: 'dashboard.tournamentRejected', color: 'bg-red-100 text-red-700' },
+    attended: { labelKey: 'dashboard.tournamentAttended', color: 'bg-blue-100 text-blue-700' },
+    cancelled: { labelKey: 'dashboard.tournamentCancelled', color: 'bg-gray-100 text-gray-600' },
+  };
+
   const levelLabel: Record<string, string> = {
-    beginner: 'Начинающий',
-    intermediate: 'Средний',
-    advanced: 'Продвинутый',
+    beginner: t('dashboard.levelBeginner'),
+    intermediate: t('dashboard.levelIntermediate'),
+    advanced: t('dashboard.levelAdvanced'),
   };
 
   return (
     <div>
       <div className="flex gap-1 bg-white rounded-2xl p-1.5 shadow-card mb-8 overflow-x-auto">
-        {tabs.map(({ id, label, icon: Icon }) => (
+        {tabs.map(({ id, labelKey, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActive(id)}
@@ -49,7 +64,7 @@ export default function DashboardTabs({
             )}
           >
             <Icon className="w-4 h-4" />
-            {label}
+            {t(labelKey)}
             {id === 'enrollments' && enrollments.length > 0 && (
               <span className={cn('text-xs px-2 py-0.5 rounded-full', active === id ? 'bg-white/20' : 'bg-gray-100')}>
                 {enrollments.length}
@@ -69,9 +84,9 @@ export default function DashboardTabs({
           {enrollments.length === 0 ? (
             <EmptyState
               icon={<BookOpen className="w-10 h-10 text-gray-200" />}
-              title="Записей пока нет"
-              desc="Запишитесь на занятия в ChessKing"
-              cta={{ href: '/enroll', label: 'Записаться' }}
+              title={t('dashboard.emptyEnrollments')}
+              desc={t('dashboard.emptyEnrollmentsText')}
+              cta={{ href: '/enroll', label: t('nav.enroll') }}
             />
           ) : (
             <div className="space-y-4">
@@ -80,17 +95,17 @@ export default function DashboardTabs({
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <h3 className="font-display font-semibold text-king-navy text-base">{e.parentName}</h3>
-                      {e.studentName && <p className="text-sm text-king-gray">Ученик: {e.studentName}</p>}
+                      {e.studentName && <p className="text-sm text-king-gray">{t('dashboard.student', { name: e.studentName })}</p>}
                     </div>
                     <span className={cn('px-3 py-1 rounded-full text-xs font-semibold', statusLabel[e.status]?.color)}>
-                      {statusLabel[e.status]?.label || e.status}
+                      {statusLabel[e.status]?.labelKey ? t(statusLabel[e.status].labelKey) : e.status}
                     </span>
                   </div>
                   <div className="grid sm:grid-cols-3 gap-3 mt-4 text-sm text-king-gray">
                     {e.branch && (
                       <span className="flex items-center gap-1.5">
                         <MapPin className="w-3.5 h-3.5 text-king-gold" />
-                        {e.branch.name}
+                        <DynamicText text={e.branch.name} cacheKey={`branch-name-${e.branch._id || e.branch.name}`} />
                       </span>
                     )}
                     <span className="flex items-center gap-1.5">
@@ -99,12 +114,12 @@ export default function DashboardTabs({
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-king-gold" />
-                      {formatDateShort(e.createdAt)}
+                      <LocalizedDate value={e.createdAt} format="short" />
                     </span>
                   </div>
                   {e.level && (
                     <p className="text-xs text-king-gray mt-2">
-                      Уровень: <span className="font-medium text-king-navy">{levelLabel[e.level]}</span>
+                      {t('dashboard.level')} <span className="font-medium text-king-navy">{levelLabel[e.level]}</span>
                     </p>
                   )}
                 </div>
@@ -119,9 +134,9 @@ export default function DashboardTabs({
           {comments.length === 0 ? (
             <EmptyState
               icon={<MessageSquare className="w-10 h-10 text-gray-200" />}
-              title="Комментариев пока нет"
-              desc="Оставьте комментарий под турниром"
-              cta={{ href: '/tournaments', label: 'Турниры' }}
+              title={t('dashboard.emptyComments')}
+              desc={t('dashboard.emptyCommentsText')}
+              cta={{ href: '/tournaments', label: t('nav.tournaments') }}
             />
           ) : (
             <div className="space-y-4">
@@ -134,14 +149,16 @@ export default function DashboardTabs({
                           href={`/tournaments/${c.tournament.slug}`}
                           className="text-king-blue font-medium text-sm hover:underline flex items-center gap-1"
                         >
-                          {c.tournament.title}
+                          <DynamicText text={c.tournament.title} cacheKey={`tournament-title-${c.tournament._id || c.tournament.slug}`} />
                           <ExternalLink className="w-3 h-3" />
                         </Link>
                       )}
                     </div>
-                    <span className="text-xs text-king-gray flex-shrink-0">{formatDate(c.createdAt)}</span>
+                    <span className="text-xs text-king-gray flex-shrink-0"><LocalizedDate value={c.createdAt} /></span>
                   </div>
-                  <p className="text-king-navy text-sm leading-relaxed">{c.content || c.text}</p>
+                  <p className="text-king-navy text-sm leading-relaxed">
+                    <DynamicText text={c.content || c.text} cacheKey={`comment-${c._id}`} />
+                  </p>
                 </div>
               ))}
             </div>
@@ -154,16 +171,16 @@ export default function DashboardTabs({
           {tournamentRegistrations.length === 0 ? (
             <EmptyState
               icon={<Trophy className="w-10 h-10 text-gray-200" />}
-              title="Вы пока не зарегистрированы на турниры"
-              desc="Подайте заявку на странице турнира"
-              cta={{ href: '/tournaments', label: 'Смотреть турниры' }}
+              title={t('dashboard.emptyTournaments')}
+              desc={t('dashboard.emptyTournamentsText')}
+              cta={{ href: '/tournaments', label: t('dashboard.watchTournaments') }}
             />
           ) : (
             <div className="space-y-4">
               {tournamentRegistrations.map((registration) => {
-                const t = registration.tournament;
+                const tournament = registration.tournament;
                 const status = tournamentStatusLabel[registration.status] || {
-                  label: registration.status,
+                  labelKey: registration.status,
                   color: 'bg-gray-100 text-gray-600',
                 };
 
@@ -171,33 +188,36 @@ export default function DashboardTabs({
                   <div key={registration._id} className="bg-white rounded-2xl shadow-card p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
-                        {t ? (
+                        {tournament ? (
                           <Link
-                            href={`/tournaments/${t.slug}`}
+                            href={`/tournaments/${tournament.slug}`}
                             className="font-display font-semibold text-king-navy hover:text-king-blue transition-colors inline-flex items-center gap-1.5"
                           >
-                            {t.title}
+                            <DynamicText text={tournament.title} cacheKey={`tournament-title-${tournament._id || tournament.slug}`} />
                             <ExternalLink className="w-3.5 h-3.5" />
                           </Link>
                         ) : (
-                          <span className="font-display font-semibold text-king-gray">Турнир удалён</span>
+                          <span className="font-display font-semibold text-king-gray">{t('dashboard.deletedTournament')}</span>
                         )}
                         <div className="grid sm:grid-cols-3 gap-3 mt-4 text-sm text-king-gray">
-                          {t?.startDate && (
+                          {tournament?.startDate && (
                             <span className="flex items-center gap-1.5">
                               <Calendar className="w-3.5 h-3.5 text-king-gold" />
-                              {formatDateShort(t.startDate)}
+                              <LocalizedDate value={tournament.startDate} format="short" />
                             </span>
                           )}
-                          {t?.branch && (
+                          {tournament?.branch && (
                             <span className="flex items-center gap-1.5">
                               <MapPin className="w-3.5 h-3.5 text-king-gold" />
-                              {t.branch.name}{t.branch.city ? `, ${t.branch.city}` : ''}
+                              <DynamicText
+                                text={`${tournament.branch.name}${tournament.branch.city ? `, ${tournament.branch.city}` : ''}`}
+                                cacheKey={`branch-title-${tournament.branch._id || tournament.branch.name}`}
+                              />
                             </span>
                           )}
                           <span className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5 text-king-gold" />
-                            Заявка: {formatDateShort(registration.createdAt)}
+                            {t('dashboard.applicationDate')} <LocalizedDate value={registration.createdAt} format="short" />
                           </span>
                         </div>
                         {registration.adminNote && (
@@ -205,7 +225,7 @@ export default function DashboardTabs({
                         )}
                       </div>
                       <span className={cn('px-3 py-1 rounded-full text-xs font-semibold', status.color)}>
-                        {status.label}
+                        {t(status.labelKey)}
                       </span>
                     </div>
                   </div>

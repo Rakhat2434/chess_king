@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 
 interface Props {
   images: string[];
@@ -10,7 +11,9 @@ interface Props {
 }
 
 export default function TournamentGallery({ images, title }: Props) {
+  const { t } = useTranslation();
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const photoLabel = t('common.photo').toLowerCase();
 
   const prev = () => setLightbox((i) => (i !== null ? (i - 1 + images.length) % images.length : null));
   const next = () => setLightbox((i) => (i !== null ? (i + 1) % images.length : null));
@@ -26,7 +29,7 @@ export default function TournamentGallery({ images, title }: Props) {
           >
             <Image
               src={src}
-              alt={`${title} — фото ${i + 1}`}
+              alt={`${title} — ${photoLabel} ${i + 1}`}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -47,7 +50,7 @@ export default function TournamentGallery({ images, title }: Props) {
           <div className="relative max-w-4xl max-h-[85vh] w-full mx-8" onClick={(e) => e.stopPropagation()}>
             <Image
               src={images[lightbox]}
-              alt={`${title} — фото ${lightbox + 1}`}
+              alt={`${title} — ${photoLabel} ${lightbox + 1}`}
               width={1200}
               height={800}
               className="object-contain w-full h-full rounded-2xl"

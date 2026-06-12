@@ -4,7 +4,8 @@ import Image from 'next/image';
 import connectDB from '@/lib/db';
 import News from '@/models/News';
 import Tournament from '@/models/Tournament';
-import { formatDateShort, getWhatsAppUrl, INSTAGRAM_URL, truncate } from '@/lib/utils';
+import { getWhatsAppUrl, INSTAGRAM_URL } from '@/lib/utils';
+import { translate } from '@/lib/i18n';
 import {
   ArrowRight,
   CalendarDays,
@@ -23,13 +24,15 @@ import {
 } from 'lucide-react';
 import ShareButton from '@/components/shared/ShareButton';
 import Reveal from '@/components/shared/Reveal';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
+import LocalizedDate from '@/components/i18n/LocalizedDate';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'ChessKing — Шахматная Академия Казахстана',
-  description:
-    'Профессиональное обучение шахматам для детей и взрослых. Турниры, опытные тренеры, удобные филиалы.',
+  title: translate('ru', 'home.metaTitle'),
+  description: translate('ru', 'home.metaDescription'),
 };
 
 async function getHomeData() {
@@ -47,32 +50,32 @@ async function getHomeData() {
 }
 
 const heroStats = [
-  { icon: Users, value: '500+', label: 'учеников' },
-  { icon: Trophy, value: '120+', label: 'турниров' },
-  { icon: ShieldCheck, value: '15+', label: 'тренеров' },
-  { icon: MapPin, value: '3', label: 'филиала' },
+  { icon: Users, value: '500+', labelKey: 'home.statsStudents' },
+  { icon: Trophy, value: '120+', labelKey: 'home.statsTournaments' },
+  { icon: ShieldCheck, value: '15+', labelKey: 'home.statsCoaches' },
+  { icon: MapPin, value: '3', labelKey: 'home.statsBranches' },
 ];
 
 const features = [
   {
     icon: ShieldCheck,
-    title: 'Сильные тренеры',
-    desc: 'Занятия ведут опытные шахматисты, которые умеют объяснять стратегию просто и точно.',
+    titleKey: 'home.featureCoachTitle',
+    descKey: 'home.featureCoachText',
   },
   {
     icon: Target,
-    title: 'Понятный рост',
-    desc: 'Ученик движется по программе: дебюты, тактика, эндшпиль, практика и разбор партий.',
+    titleKey: 'home.featureGrowthTitle',
+    descKey: 'home.featureGrowthText',
   },
   {
     icon: Trophy,
-    title: 'Регулярные турниры',
-    desc: 'Соревновательная среда помогает быстрее принимать решения и играть увереннее.',
+    titleKey: 'home.featureTournamentsTitle',
+    descKey: 'home.featureTournamentsText',
   },
   {
     icon: Zap,
-    title: 'Живые занятия',
-    desc: 'Группы по уровню, индивидуальная обратная связь и задачи, которые хочется решать.',
+    titleKey: 'home.featureLiveTitle',
+    descKey: 'home.featureLiveText',
   },
 ];
 
@@ -97,37 +100,37 @@ export default async function HomePage() {
           <Reveal className="max-w-3xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-300/25 bg-white/10 px-4 py-2 text-sm font-semibold text-amber-200 shadow-lg shadow-black/10 backdrop-blur">
               <Crown className="h-4 w-4 text-[#F59E0B]" />
-              Шахматная академия нового поколения
+              <T k="home.badge" />
             </div>
 
             <h1 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-7xl">
-              Учись думать как{' '}
+              <T k="home.heroTitleStart" />{' '}
               <span className="bg-gradient-to-r from-[#F59E0B] via-amber-200 to-[#F59E0B] bg-clip-text text-transparent">
-                чемпион
+                <T k="home.heroTitleHighlight" />
               </span>
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200 sm:text-xl">
-              Профессиональная шахматная академия с опытными тренерами, сильной программой и регулярными турнирами для детей и взрослых.
+              <T k="home.heroText" />
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/enroll" className="btn-gold px-8 py-4 text-base sm:w-auto">
                 <Crown className="h-5 w-5" />
-                Записаться
+                <T k="home.enrollButton" />
               </Link>
               <Link
                 href="/tournaments"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-black/10 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-white/50 hover:bg-white hover:text-[#0B1F3A] hover:shadow-xl active:scale-95 sm:w-auto"
               >
-                Смотреть турниры
+                <T k="home.viewTournaments" />
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-medium text-slate-300">
               <a
-                href={getWhatsAppUrl('Здравствуйте! Хочу узнать больше о ChessKing')}
+                href={getWhatsAppUrl(translate('ru', 'whatsappMessages.home'))}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 transition-colors hover:text-green-300"
@@ -167,9 +170,9 @@ export default async function HomePage() {
                 </div>
 
                 <div className="grid gap-3">
-                  {heroStats.map(({ icon: Icon, value, label }) => (
+                  {heroStats.map(({ icon: Icon, value, labelKey }) => (
                     <div
-                      key={label}
+                      key={labelKey}
                       className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg shadow-black/10"
                     >
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B] shadow-lg shadow-amber-500/20">
@@ -177,7 +180,7 @@ export default async function HomePage() {
                       </div>
                       <div>
                         <div className="font-display text-3xl font-bold leading-none text-white">{value}</div>
-                        <div className="mt-1 text-sm font-medium text-slate-300">{label}</div>
+                        <div className="mt-1 text-sm font-medium text-slate-300"><T k={labelKey} /></div>
                       </div>
                     </div>
                   ))}
@@ -188,9 +191,9 @@ export default async function HomePage() {
                 <div className="flex items-start gap-3">
                   <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-[#F59E0B]" />
                   <div>
-                    <p className="font-semibold text-white">Пробное занятие бесплатно</p>
+                    <p className="font-semibold text-white"><T k="home.trialTitle" /></p>
                     <p className="mt-1 text-sm leading-6 text-slate-300">
-                      Тренер оценит уровень, подберет группу и покажет, как будет строиться обучение.
+                      <T k="home.trialText" />
                     </p>
                   </div>
                 </div>
@@ -203,22 +206,22 @@ export default async function HomePage() {
       <section className="bg-white py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]">подход</p>
-            <h2 className="section-title mt-3">Система, которая делает шахматы понятными</h2>
+            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]"><T k="home.approachEyebrow" /></p>
+            <h2 className="section-title mt-3"><T k="home.approachTitle" /></h2>
             <p className="section-subtitle">
-              Чёткая программа, практические партии и турниры дают ученику не просто знания, а уверенность за доской.
+              <T k="home.approachText" />
             </p>
           </Reveal>
 
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map(({ icon: Icon, title, desc }, index) => (
-              <Reveal key={title} delay={index * 0.04}>
+            {features.map(({ icon: Icon, titleKey, descKey }, index) => (
+              <Reveal key={titleKey} delay={index * 0.04}>
                 <div className="group h-full rounded-2xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-900/5 transition-all duration-300 hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl hover:shadow-slate-900/10">
                   <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#0B1F3A] transition-all duration-300 group-hover:bg-[#F59E0B] group-hover:shadow-lg group-hover:shadow-amber-500/25">
                     <Icon className="h-6 w-6 text-white transition-colors duration-300 group-hover:text-[#0B1F3A]" />
                   </div>
-                  <h3 className="font-display text-xl font-bold text-[#0B1F3A]">{title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{desc}</p>
+                  <h3 className="font-display text-xl font-bold text-[#0B1F3A]"><T k={titleKey} /></h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-600"><T k={descKey} /></p>
                 </div>
               </Reveal>
             ))}
@@ -231,11 +234,11 @@ export default async function HomePage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Reveal className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]">новости</p>
-                <h2 className="section-title mt-3">Последние события академии</h2>
+                <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]"><T k="home.newsEyebrow" /></p>
+                <h2 className="section-title mt-3"><T k="home.newsTitle" /></h2>
               </div>
               <Link href="/news" className="btn-outline w-full px-5 py-3 text-sm sm:w-auto">
-                Все новости
+                <T k="home.allNews" />
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Reveal>
@@ -258,19 +261,21 @@ export default async function HomePage() {
                         </div>
                       )}
                       <div className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0B1F3A] shadow-lg">
-                        Новость
+                        <T k="home.newsBadge" />
                       </div>
                     </div>
                     <div className="p-6">
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        {news.publishedAt ? formatDateShort(news.publishedAt) : formatDateShort(news.createdAt)}
+                        <LocalizedDate value={news.publishedAt || news.createdAt} format="short" />
                       </p>
                       <h3 className="mt-3 font-display text-xl font-bold leading-snug text-[#0B1F3A] transition-colors group-hover:text-[#1D4ED8] line-clamp-2">
-                        {news.title}
+                        <DynamicText text={news.title} cacheKey={`news-title-${news._id}`} />
                       </h3>
-                      <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-3">{news.excerpt}</p>
+                      <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-3">
+                        <DynamicText text={news.excerpt} cacheKey={`news-excerpt-${news._id}`} />
+                      </p>
                       <div className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-[#1D4ED8]">
-                        Читать
+                        <T k="common.read" />
                         <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </div>
                     </div>
@@ -287,11 +292,11 @@ export default async function HomePage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Reveal className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]">турниры</p>
-                <h2 className="section-title mt-3">Ближайшие события</h2>
+                <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]"><T k="home.tournamentsEyebrow" /></p>
+                <h2 className="section-title mt-3"><T k="home.tournamentsTitle" /></h2>
               </div>
               <Link href="/tournaments" className="btn-outline w-full px-5 py-3 text-sm sm:w-auto">
-                Все турниры
+                <T k="home.allTournaments" />
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Reveal>
@@ -315,28 +320,28 @@ export default async function HomePage() {
                       )}
                       <div className="absolute left-4 top-4">
                         <span className={tournament.status === 'ongoing' ? 'badge-ongoing' : 'badge-upcoming'}>
-                          {tournament.status === 'ongoing' ? 'Идёт' : 'Скоро'}
+                          <T k={tournament.status === 'ongoing' ? 'tournaments.statusOngoingShort' : 'tournaments.statusUpcomingShort'} />
                         </span>
                       </div>
                     </div>
                     <div className="p-6">
                       <h3 className="font-display text-xl font-bold leading-snug text-[#0B1F3A] transition-colors group-hover:text-[#1D4ED8] line-clamp-2">
-                        {tournament.title}
+                        <DynamicText text={tournament.title} cacheKey={`tournament-title-${tournament._id}`} />
                       </h3>
                       <div className="mt-4 grid gap-2 text-sm font-medium text-slate-600">
                         <span className="inline-flex items-center gap-2">
                           <CalendarDays className="h-4 w-4 text-[#F59E0B]" />
-                          {formatDateShort(tournament.startDate)}
+                          <LocalizedDate value={tournament.startDate} format="short" />
                         </span>
                         {tournament.branch && (
                           <span className="inline-flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-[#F59E0B]" />
-                            {tournament.branch.name}
+                            <DynamicText text={tournament.branch.name} cacheKey={`branch-name-${tournament.branch._id || tournament.branch.name}`} />
                           </span>
                         )}
                       </div>
                       <p className="mt-4 text-sm leading-6 text-slate-600 line-clamp-2">
-                        {truncate(tournament.description, 110)}
+                        <DynamicText text={tournament.description} cacheKey={`tournament-description-${tournament._id}`} />
                       </p>
                     </div>
                   </Link>
@@ -351,20 +356,20 @@ export default async function HomePage() {
         <div className="absolute inset-0 hero-mesh" />
         <div className="absolute inset-0 chess-bg opacity-30" />
         <Reveal className="relative mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]">старт</p>
+          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]"><T k="home.startEyebrow" /></p>
           <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
-            Запишитесь на пробное занятие
+            <T k="home.startTitle" />
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-200">
-            Первое занятие бесплатно. Тренер оценит уровень, ответит на вопросы и подберет удобный формат обучения.
+            <T k="home.startText" />
           </p>
           <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/enroll" className="btn-gold px-9 py-4 text-base">
               <Crown className="h-5 w-5" />
-              Записаться бесплатно
+              <T k="home.freeEnroll" />
             </Link>
             <a
-              href={getWhatsAppUrl('Хочу записаться на пробное занятие')}
+              href={getWhatsAppUrl(translate('ru', 'whatsappMessages.trial'))}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-9 py-4 text-base font-semibold text-white shadow-lg shadow-black/10 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:text-[#0B1F3A]"
@@ -374,10 +379,10 @@ export default async function HomePage() {
             </a>
           </div>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 text-sm font-medium text-slate-300 sm:flex-row sm:gap-6">
-            {['Без предоплаты', 'Пробный урок бесплатно', 'Группы по уровню'].map((item) => (
-              <span key={item} className="inline-flex items-center gap-2">
+            {['home.noPrepayment', 'home.freeTrial', 'home.levelGroups'].map((itemKey) => (
+              <span key={itemKey} className="inline-flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-[#F59E0B]" />
-                {item}
+                <T k={itemKey} />
               </span>
             ))}
           </div>

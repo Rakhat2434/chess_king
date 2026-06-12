@@ -7,12 +7,15 @@ import Coach from '@/models/Coach';
 import { Clock, Map, MapPin, MessageCircle, Navigation, Phone, Sparkles, Users } from 'lucide-react';
 import { getGoogleMapsEmbedSrc, getSafeGoogleMapsUrl, getWhatsAppUrl } from '@/lib/utils';
 import Reveal from '@/components/shared/Reveal';
+import { translate } from '@/lib/i18n';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Филиалы',
-  description: 'Адреса и расписание филиалов ChessKing',
+  title: translate('ru', 'branches.metaTitle'),
+  description: translate('ru', 'branches.metaDescription'),
 };
 
 export default async function BranchesPage() {
@@ -38,11 +41,11 @@ export default async function BranchesPage() {
           <Reveal>
             <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/25 bg-white/10 px-4 py-2 text-sm font-semibold text-amber-200 backdrop-blur">
               <Sparkles className="h-4 w-4 text-[#F59E0B]" />
-              Мы рядом
+              <T k="branches.badge" />
             </div>
-            <h1 className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl">Наши филиалы</h1>
+            <h1 className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl"><T k="branches.title" /></h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-200">
-              Выберите удобную локацию, посмотрите расписание и запишитесь на пробное занятие.
+              <T k="branches.subtitle" />
             </p>
           </Reveal>
         </div>
@@ -52,7 +55,7 @@ export default async function BranchesPage() {
         {branches.length === 0 && (
           <Reveal className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-lg shadow-slate-900/5">
             <MapPin className="mx-auto mb-4 h-16 w-16 text-slate-300" />
-            <p className="font-display text-2xl font-bold text-[#0B1F3A]">Филиалы скоро появятся</p>
+            <p className="font-display text-2xl font-bold text-[#0B1F3A]"><T k="branches.empty" /></p>
           </Reveal>
         )}
 
@@ -77,15 +80,19 @@ export default async function BranchesPage() {
                         loading="lazy"
                         allowFullScreen
                         referrerPolicy="no-referrer-when-downgrade"
-                        title={`Карта — ${branch.name}`}
+                        title={translate('ru', 'branches.mapTitle', { name: branch.name })}
                       />
                     ) : (
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
                         <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#F59E0B] shadow-xl shadow-amber-500/25">
                           <MapPin className="h-10 w-10 text-[#0B1F3A]" />
                         </div>
-                        <p className="font-display text-2xl font-bold text-white">{branch.city}</p>
-                        <p className="mt-2 max-w-xs text-sm leading-6 text-slate-300">{branch.address}</p>
+                        <p className="font-display text-2xl font-bold text-white">
+                          <DynamicText text={branch.city} cacheKey={`branch-city-${branch._id}`} />
+                        </p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-slate-300">
+                          <DynamicText text={branch.address} cacheKey={`branch-address-${branch._id}`} />
+                        </p>
                       </div>
                     )}
                   </div>
@@ -94,14 +101,18 @@ export default async function BranchesPage() {
                     <div>
                       <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
                         <Navigation className="h-3.5 w-3.5" />
-                        {branch.city}
+                        <DynamicText text={branch.city} cacheKey={`branch-city-pill-${branch._id}`} />
                       </div>
-                      <h2 className="font-display text-3xl font-bold leading-tight text-[#0B1F3A]">{branch.name}</h2>
+                      <h2 className="font-display text-3xl font-bold leading-tight text-[#0B1F3A]">
+                        <DynamicText text={branch.name} cacheKey={`branch-name-${branch._id}`} />
+                      </h2>
 
                       <div className="mt-6 grid gap-4 text-sm font-medium text-slate-700">
                         <div className="flex items-start gap-3">
                           <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#F59E0B]" />
-                          <span>{branch.address}, {branch.city}</span>
+                          <span>
+                            <DynamicText text={`${branch.address}, ${branch.city}`} cacheKey={`branch-full-address-${branch._id}`} />
+                          </span>
                         </div>
                         <div className="flex items-center gap-3">
                           <Phone className="h-5 w-5 shrink-0 text-[#F59E0B]" />
@@ -111,7 +122,7 @@ export default async function BranchesPage() {
                         </div>
                         <div className="flex items-start gap-3">
                           <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#F59E0B]" />
-                          <span>{branch.schedule}</span>
+                          <span><DynamicText text={branch.schedule} cacheKey={`branch-schedule-${branch._id}`} /></span>
                         </div>
                       </div>
 
@@ -119,7 +130,7 @@ export default async function BranchesPage() {
                         <div className="mt-7">
                           <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                             <Users className="h-4 w-4 text-[#F59E0B]" />
-                            Тренеры
+                            <T k="branches.coaches" />
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {coaches.map((coach: any) => (
@@ -137,11 +148,11 @@ export default async function BranchesPage() {
 
                     <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                       <Link href={`/enroll?branch=${branch._id.toString()}`} className="btn-primary px-6 py-3 text-sm">
-                        Записаться
+                        <T k="branches.enroll" />
                       </Link>
                       {branch.whatsapp && (
                         <a
-                          href={getWhatsAppUrl(`Хочу записаться в ${branch.name}`)}
+                          href={getWhatsAppUrl(translate('ru', 'whatsappMessages.branchEnroll', { branch: branch.name }))}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-50 px-6 py-3 text-sm font-bold text-green-700 transition-all hover:-translate-y-0.5 hover:bg-green-100 hover:shadow-lg"
@@ -158,7 +169,7 @@ export default async function BranchesPage() {
                           className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-6 py-3 text-sm font-bold text-[#1D4ED8] transition-all hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-lg"
                         >
                           <Map className="h-4 w-4" />
-                          На карте
+                          <T k="branches.map" />
                         </a>
                       )}
                     </div>

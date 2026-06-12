@@ -13,6 +13,10 @@ import ShareButton from '@/components/shared/ShareButton';
 import TournamentComments from '@/components/tournament/TournamentComments';
 import TournamentGallery from '@/components/tournament/TournamentGallery';
 import TournamentRegistrationActions from '@/components/tournament/TournamentRegistrationActions';
+import { translate } from '@/lib/i18n';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
+import LocalizedDate from '@/components/i18n/LocalizedDate';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +25,7 @@ interface Props { params: { slug: string } }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   await connectDB();
   const t = await Tournament.findOne({ slug: params.slug, isPublished: true }).lean() as any;
-  if (!t) return { title: 'Турнир не найден' };
+  if (!t) return { title: translate('ru', 'tournaments.notFoundTitle') };
   return {
     title: t.title,
     description: t.description?.slice(0, 160),
@@ -70,16 +74,16 @@ export default async function TournamentDetailPage({ params }: Props) {
 
   const placeEmoji: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
   const statusLabel: Record<string, string> = {
-    upcoming: 'Предстоит',
-    ongoing: 'Идёт',
-    completed: 'Завершён',
+    upcoming: 'tournaments.statusUpcoming',
+    ongoing: 'tournaments.statusOngoing',
+    completed: 'tournaments.statusCompleted',
   };
   const tournamentDateLabel = tournament.endDate
     ? `${formatDate(tournament.startDate)} — ${formatDate(tournament.endDate)}`
     : formatDate(tournament.startDate);
   const branchLabel = tournament.branch
     ? `${tournament.branch.name}${tournament.branch.city ? `, ${tournament.branch.city}` : ''}`
-    : 'Не указан';
+    : '';
 
   return (
     <div className="min-h-screen bg-white">
@@ -93,7 +97,7 @@ export default async function TournamentDetailPage({ params }: Props) {
           <div className="max-w-4xl mx-auto">
             <Link href="/tournaments" className="inline-flex items-center gap-1.5 text-gray-300 hover:text-white text-sm mb-4 transition-colors">
               <ArrowLeft className="w-4 h-4" />
-              Все турниры
+              <T k="tournaments.allTournaments" />
             </Link>
             <div className="flex flex-wrap items-center gap-3 mb-3">
               <span className={
@@ -101,11 +105,11 @@ export default async function TournamentDetailPage({ params }: Props) {
                 tournament.status === 'upcoming' ? 'badge-upcoming' :
                 'badge-completed'
               }>
-                {statusLabel[tournament.status]}
+                <T k={statusLabel[tournament.status]} />
               </span>
             </div>
             <h1 className="font-display text-3xl md:text-5xl font-bold text-white leading-tight">
-              {tournament.title}
+              <DynamicText text={tournament.title} cacheKey={`tournament-title-${tournament._id}`} />
             </h1>
           </div>
         </div>
@@ -116,13 +120,21 @@ export default async function TournamentDetailPage({ params }: Props) {
         <div className="flex flex-wrap gap-4 mb-8 text-sm text-king-gray p-5 bg-gray-50 rounded-2xl">
           <span className="flex items-center gap-1.5">
             <Calendar className="w-4 h-4 text-king-gold" />
-            {formatDate(tournament.startDate)}
-            {tournament.endDate && ` — ${formatDate(tournament.endDate)}`}
+            <LocalizedDate value={tournament.startDate} />
+            {tournament.endDate && (
+              <>
+                {' — '}
+                <LocalizedDate value={tournament.endDate} />
+              </>
+            )}
           </span>
           {tournament.branch && (
             <span className="flex items-center gap-1.5">
               <MapPin className="w-4 h-4 text-king-gold" />
-              {tournament.branch.name}{tournament.branch.city ? `, ${tournament.branch.city}` : ''}
+              <DynamicText
+                text={`${tournament.branch.name}${tournament.branch.city ? `, ${tournament.branch.city}` : ''}`}
+                cacheKey={`branch-title-${tournament.branch._id || tournament.branch.name}`}
+              />
             </span>
           )}
           <ShareButton url={`/tournaments/${params.slug}`} className="flex items-center gap-1.5 text-king-blue hover:underline ml-auto" />
@@ -140,7 +152,7 @@ export default async function TournamentDetailPage({ params }: Props) {
 
         {/* Description */}
         <div className="prose-king font-sans mb-10">
-          <p>{tournament.description}</p>
+          <p><DynamicText text={tournament.description} cacheKey={`tournament-description-${tournament._id}`} /></p>
         </div>
 
         {/* Prizes for completed */}
@@ -148,7 +160,7 @@ export default async function TournamentDetailPage({ params }: Props) {
           <div className="mb-10">
             <h2 className="font-display text-2xl font-bold text-king-navy mb-5 flex items-center gap-2">
               <Trophy className="w-6 h-6 text-king-gold" />
-              Результаты турнира
+              <T k="tournaments.results" />
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {tournament.prizes.map((prize: any) => (
@@ -169,7 +181,7 @@ export default async function TournamentDetailPage({ params }: Props) {
                     </div>
                   )}
                   <p className="font-display font-bold text-king-navy text-lg">{prize.name}</p>
-                  <p className="text-sm text-king-gray mt-1">{prize.place} место</p>
+                  <p className="text-sm text-king-gray mt-1"><T k="common.place" values={{ place: prize.place }} /></p>
                 </div>
               ))}
             </div>
@@ -179,7 +191,7 @@ export default async function TournamentDetailPage({ params }: Props) {
         {/* Gallery */}
         {tournament.gallery?.length > 0 && (
           <div className="mb-10">
-            <h2 className="font-display text-2xl font-bold text-king-navy mb-5">Фотогалерея</h2>
+            <h2 className="font-display text-2xl font-bold text-king-navy mb-5"><T k="tournaments.gallery" /></h2>
             <TournamentGallery images={tournament.gallery} title={tournament.title} />
           </div>
         )}
@@ -187,7 +199,7 @@ export default async function TournamentDetailPage({ params }: Props) {
         {/* Comments */}
         <div className="mt-12">
           <h2 className="font-display text-2xl font-bold text-king-navy mb-6 flex items-center gap-2">
-            Комментарии
+            <T k="tournaments.comments" />
             <span className="text-sm font-sans font-normal text-king-gray">({comments.length})</span>
           </h2>
           <TournamentComments

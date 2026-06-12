@@ -3,15 +3,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import connectDB from '@/lib/db';
 import News from '@/models/News';
-import { escapeRegExp, formatDateShort } from '@/lib/utils';
+import { escapeRegExp } from '@/lib/utils';
 import { ArrowLeft, ArrowRight, ChevronRight, Crown, Search, Sparkles } from 'lucide-react';
 import Reveal from '@/components/shared/Reveal';
+import { translate } from '@/lib/i18n';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
+import LocalizedDate from '@/components/i18n/LocalizedDate';
+import TranslatedInput from '@/components/i18n/TranslatedInput';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Новости',
-  description: 'Последние новости шахматной академии ChessKing',
+  title: translate('ru', 'news.metaTitle'),
+  description: translate('ru', 'news.metaDescription'),
 };
 
 const PER_PAGE = 9;
@@ -56,11 +61,11 @@ export default async function NewsPage({ searchParams }: Props) {
           <Reveal>
             <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/25 bg-white/10 px-4 py-2 text-sm font-semibold text-amber-200 backdrop-blur">
               <Sparkles className="h-4 w-4 text-[#F59E0B]" />
-              Академия ChessKing
+              <T k="news.badge" />
             </div>
-            <h1 className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl">Новости</h1>
+            <h1 className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl"><T k="news.title" /></h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-200">
-              Следите за турнирами, достижениями учеников и важными событиями академии.
+              <T k="news.subtitle" />
             </p>
           </Reveal>
         </div>
@@ -70,25 +75,25 @@ export default async function NewsPage({ searchParams }: Props) {
         <Reveal className="mb-10 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/10 sm:p-5">
           <form method="get" className="grid gap-3 sm:grid-cols-[1fr_auto]">
             <label className="relative block">
-              <span className="sr-only">Поиск новостей</span>
+              <span className="sr-only"><T k="news.searchLabel" /></span>
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input
+              <TranslatedInput
                 name="q"
                 defaultValue={q}
                 type="text"
-                placeholder="Поиск новостей..."
+                placeholderKey="news.searchPlaceholder"
                 className="input h-12 pl-12"
               />
             </label>
             <button type="submit" className="btn-primary h-12 px-6">
-              Найти
+              <T k="common.find" />
             </button>
           </form>
           <div className="mt-4 flex flex-col gap-2 text-sm font-medium text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-            <span>{total > 0 ? `Найдено: ${total}` : 'Пока нет опубликованных новостей'}</span>
+            <span>{total > 0 ? <T k="news.found" values={{ count: total }} /> : <T k="news.emptyPublished" />}</span>
             {q && (
               <Link href="/news" className="inline-flex items-center font-semibold text-[#1D4ED8] hover:text-[#0B1F3A]">
-                Очистить поиск
+                <T k="common.clearSearch" />
               </Link>
             )}
           </div>
@@ -97,10 +102,10 @@ export default async function NewsPage({ searchParams }: Props) {
         {news.length === 0 && (
           <Reveal className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-lg shadow-slate-900/5">
             <Crown className="mx-auto mb-4 h-16 w-16 text-slate-300" />
-            <p className="font-display text-2xl font-bold text-[#0B1F3A]">Новостей не найдено</p>
+            <p className="font-display text-2xl font-bold text-[#0B1F3A]"><T k="news.notFound" /></p>
             {q && (
               <Link href="/news" className="btn-outline mt-6 inline-flex">
-                Показать все новости
+                <T k="news.showAll" />
               </Link>
             )}
           </Reveal>
@@ -124,19 +129,21 @@ export default async function NewsPage({ searchParams }: Props) {
                     </div>
                   )}
                   <div className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0B1F3A] shadow-lg">
-                    Новость
+                    <T k="news.badgeItem" />
                   </div>
                 </div>
                 <div className="p-6">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    {item.publishedAt ? formatDateShort(item.publishedAt) : formatDateShort(item.createdAt)}
+                    <LocalizedDate value={item.publishedAt || item.createdAt} format="short" />
                   </p>
                   <h2 className="mt-3 font-display text-xl font-bold leading-snug text-[#0B1F3A] transition-colors group-hover:text-[#1D4ED8] line-clamp-2">
-                    {item.title}
+                    <DynamicText text={item.title} cacheKey={`news-title-${item._id}`} />
                   </h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-3">{item.excerpt}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-3">
+                    <DynamicText text={item.excerpt} cacheKey={`news-excerpt-${item._id}`} />
+                  </p>
                   <div className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-[#1D4ED8]">
-                    Читать
+                    <T k="common.read" />
                     <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </div>
                 </div>
@@ -146,14 +153,14 @@ export default async function NewsPage({ searchParams }: Props) {
         </div>
 
         {totalPages > 1 && (
-          <nav className="mt-12 flex flex-wrap items-center justify-center gap-2" aria-label="Пагинация новостей">
+          <nav className="mt-12 flex flex-wrap items-center justify-center gap-2" aria-label={translate('ru', 'news.paginationLabel')}>
             {page > 1 && (
               <Link
                 href={hrefForPage(page - 1)}
                 className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1D4ED8] hover:text-[#1D4ED8] hover:shadow-lg"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Назад
+                <T k="common.back" />
               </Link>
             )}
 
@@ -180,7 +187,7 @@ export default async function NewsPage({ searchParams }: Props) {
                 href={hrefForPage(page + 1)}
                 className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1D4ED8] hover:text-[#1D4ED8] hover:shadow-lg"
               >
-                Вперёд
+                <T k="common.forward" />
                 <ArrowRight className="h-4 w-4" />
               </Link>
             )}

@@ -4,15 +4,18 @@ import Image from 'next/image';
 import connectDB from '@/lib/db';
 import Tournament from '@/models/Tournament';
 import Branch from '@/models/Branch';
-import { formatDateShort } from '@/lib/utils';
 import { Calendar, Filter, MapPin, Sparkles, Trophy } from 'lucide-react';
 import Reveal from '@/components/shared/Reveal';
+import { translate } from '@/lib/i18n';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
+import LocalizedDate from '@/components/i18n/LocalizedDate';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Турниры',
-  description: 'Шахматные турниры ChessKing — предстоящие, текущие и завершённые',
+  title: translate('ru', 'tournaments.metaTitle'),
+  description: translate('ru', 'tournaments.metaDescription'),
 };
 
 interface Props {
@@ -20,10 +23,10 @@ interface Props {
 }
 
 const statusLabels: Record<string, string> = {
-  all: 'Все',
-  upcoming: 'Предстоящие',
-  ongoing: 'Идут сейчас',
-  completed: 'Завершённые',
+  all: 'tournaments.all',
+  upcoming: 'tournaments.upcoming',
+  ongoing: 'tournaments.ongoing',
+  completed: 'tournaments.completed',
 };
 
 export default async function TournamentsPage({ searchParams }: Props) {
@@ -50,11 +53,11 @@ export default async function TournamentsPage({ searchParams }: Props) {
           <Reveal>
             <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/25 bg-white/10 px-4 py-2 text-sm font-semibold text-amber-200 backdrop-blur">
               <Sparkles className="h-4 w-4 text-[#F59E0B]" />
-              Соревновательная практика
+              <T k="tournaments.badge" />
             </div>
-            <h1 className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl">Турниры</h1>
+            <h1 className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl"><T k="tournaments.title" /></h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-200">
-              Участвуйте в турнирах академии, набирайте опыт и отслеживайте ближайшие события.
+              <T k="tournaments.subtitle" />
             </p>
           </Reveal>
         </div>
@@ -64,11 +67,11 @@ export default async function TournamentsPage({ searchParams }: Props) {
         <Reveal className="mb-10 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/10 sm:p-6">
           <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
             <Filter className="h-4 w-4 text-[#F59E0B]" />
-            Фильтры
+            <T k="tournaments.filters" />
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            {Object.entries(statusLabels).map(([key, label]) => (
+            {Object.entries(statusLabels).map(([key, labelKey]) => (
               <Link
                 key={key}
                 href={`/tournaments?status=${key}${branchFilter ? `&branch=${branchFilter}` : ''}`}
@@ -78,7 +81,7 @@ export default async function TournamentsPage({ searchParams }: Props) {
                     : 'border border-slate-200 bg-slate-50 text-slate-700 hover:-translate-y-0.5 hover:border-[#1D4ED8] hover:bg-white hover:text-[#1D4ED8] hover:shadow-md'
                 }`}
               >
-                {label}
+                <T k={labelKey} />
               </Link>
             ))}
           </div>
@@ -93,7 +96,7 @@ export default async function TournamentsPage({ searchParams }: Props) {
                     : 'border border-slate-200 bg-slate-50 text-slate-700 hover:-translate-y-0.5 hover:border-[#F59E0B] hover:bg-white hover:text-[#0B1F3A] hover:shadow-md'
                 }`}
               >
-                Все филиалы
+                <T k="common.allBranches" />
               </Link>
               {branches.map((branch: any) => (
                 <Link
@@ -105,7 +108,7 @@ export default async function TournamentsPage({ searchParams }: Props) {
                       : 'border border-slate-200 bg-slate-50 text-slate-700 hover:-translate-y-0.5 hover:border-[#F59E0B] hover:bg-white hover:text-[#0B1F3A] hover:shadow-md'
                   }`}
                 >
-                  {branch.name}
+                  <DynamicText text={branch.name} cacheKey={`branch-name-${branch._id}`} />
                 </Link>
               ))}
             </div>
@@ -115,7 +118,7 @@ export default async function TournamentsPage({ searchParams }: Props) {
         {tournaments.length === 0 && (
           <Reveal className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-lg shadow-slate-900/5">
             <Trophy className="mx-auto mb-4 h-16 w-16 text-slate-300" />
-            <p className="font-display text-2xl font-bold text-[#0B1F3A]">Турниров не найдено</p>
+            <p className="font-display text-2xl font-bold text-[#0B1F3A]"><T k="tournaments.empty" /></p>
           </Reveal>
         )}
 
@@ -147,34 +150,39 @@ export default async function TournamentsPage({ searchParams }: Props) {
                       }
                     >
                       {tournament.status === 'ongoing'
-                        ? 'Идёт'
+                        ? <T k="tournaments.statusOngoingShort" />
                         : tournament.status === 'upcoming'
-                          ? 'Скоро'
-                          : 'Завершён'}
+                          ? <T k="tournaments.statusUpcomingShort" />
+                          : <T k="tournaments.statusCompletedShort" />}
                     </span>
                   </div>
                   {tournament.status === 'completed' && tournament.prizes?.length > 0 && (
                     <div className="absolute bottom-4 left-4 right-4">
                       <div className="rounded-xl bg-[#071020]/90 p-3 shadow-lg backdrop-blur">
-                        <p className="text-xs font-bold text-[#F59E0B]">1 место: {tournament.prizes[0]?.name}</p>
+                        <p className="text-xs font-bold text-[#F59E0B]"><T k="tournaments.firstPlace" values={{ name: tournament.prizes[0]?.name }} /></p>
                       </div>
                     </div>
                   )}
                 </div>
                 <div className="p-6">
                   <h2 className="font-display text-xl font-bold leading-snug text-[#0B1F3A] transition-colors group-hover:text-[#1D4ED8] line-clamp-2">
-                    {tournament.title}
+                    <DynamicText text={tournament.title} cacheKey={`tournament-title-${tournament._id}`} />
                   </h2>
                   <div className="mt-4 grid gap-2 text-sm font-medium text-slate-600">
                     <span className="inline-flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-[#F59E0B]" />
-                      {formatDateShort(tournament.startDate)}
-                      {tournament.endDate && ` — ${formatDateShort(tournament.endDate)}`}
+                      <LocalizedDate value={tournament.startDate} format="short" />
+                      {tournament.endDate && (
+                        <>
+                          {' — '}
+                          <LocalizedDate value={tournament.endDate} format="short" />
+                        </>
+                      )}
                     </span>
                     {tournament.branch && (
                       <span className="inline-flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-[#F59E0B]" />
-                        {tournament.branch.name}
+                        <DynamicText text={tournament.branch.name} cacheKey={`branch-name-${tournament.branch._id || tournament.branch.name}`} />
                       </span>
                     )}
                   </div>

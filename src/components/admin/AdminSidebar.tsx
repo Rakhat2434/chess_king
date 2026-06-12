@@ -9,19 +9,22 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { useTranslation } from '@/components/providers/LanguageProvider';
+import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
 
 const navItems = [
-  { href: '/admin', label: 'Дашборд', icon: LayoutDashboard, exact: true },
-  { href: '/admin/news', label: 'Новости', icon: Newspaper },
-  { href: '/admin/tournaments', label: 'Турниры', icon: Trophy },
-  { href: '/admin/tournament-registrations', label: 'Заявки на турниры', icon: ClipboardCheck },
-  { href: '/admin/branches', label: 'Филиалы', icon: MapPin },
-  { href: '/admin/coaches', label: 'Тренеры', icon: Users },
-  { href: '/admin/enrollments', label: 'Заявки', icon: ClipboardList },
-  { href: '/admin/comments', label: 'Комментарии', icon: MessageSquare },
+  { href: '/admin', labelKey: 'admin.dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/admin/news', labelKey: 'admin.news', icon: Newspaper },
+  { href: '/admin/tournaments', labelKey: 'admin.tournaments', icon: Trophy },
+  { href: '/admin/tournament-registrations', labelKey: 'admin.tournamentRegistrations', icon: ClipboardCheck },
+  { href: '/admin/branches', labelKey: 'admin.branches', icon: MapPin },
+  { href: '/admin/coaches', labelKey: 'admin.coaches', icon: Users },
+  { href: '/admin/enrollments', labelKey: 'admin.enrollments', icon: ClipboardList },
+  { href: '/admin/comments', labelKey: 'admin.comments', icon: MessageSquare },
 ];
 
 export default function AdminSidebar() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -39,14 +42,15 @@ export default function AdminSidebar() {
           <div>
             <span className="font-display text-lg font-bold text-white">Chess</span>
             <span className="font-display text-lg font-bold text-king-gold">King</span>
-            <p className="text-gray-400 text-xs -mt-0.5">Admin Panel</p>
+            <p className="text-gray-400 text-xs -mt-0.5">{t('admin.panelLabel')}</p>
           </div>
         </Link>
+        <LanguageSwitcher compact className="mt-4" />
       </div>
 
       {/* Nav */}
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(({ href, label, icon: Icon, exact }) => (
+        {navItems.map(({ href, labelKey, icon: Icon, exact }) => (
           <Link
             key={href}
             href={href}
@@ -59,7 +63,7 @@ export default function AdminSidebar() {
             )}
           >
             <Icon className="w-4 h-4 flex-shrink-0" />
-            {label}
+            {t(labelKey)}
           </Link>
         ))}
       </nav>
@@ -70,14 +74,14 @@ export default function AdminSidebar() {
           href="/"
           className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white text-sm transition-colors mb-1"
         >
-          ← На сайт
+          {t('nav.backToSite')}
         </Link>
         <button
           onClick={() => signOut({ callbackUrl: '/' })}
           className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-red-400 text-sm transition-colors w-full"
         >
           <LogOut className="w-4 h-4" />
-          Выйти
+          {t('nav.logout')}
         </button>
       </div>
     </div>

@@ -4,12 +4,15 @@ import connectDB from '@/lib/db';
 import Coach from '@/models/Coach';
 import { Champion } from '@/models/index';
 import { Crown, Target, Heart, Star, Trophy } from 'lucide-react';
+import { translate } from '@/lib/i18n';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'О нас',
-  description: 'История и миссия шахматной академии ChessKing',
+  title: translate('ru', 'about.metaTitle'),
+  description: translate('ru', 'about.metaDescription'),
 };
 
 export default async function AboutPage() {
@@ -22,18 +25,18 @@ export default async function AboutPage() {
   const values = [
     {
       icon: Target,
-      title: 'Наша миссия',
-      desc: 'Развивать интеллект, логическое мышление и стратегическое видение через шахматы. Мы верим, что шахматы — это не просто игра, а инструмент воспитания чемпионского мышления.',
+      titleKey: 'about.missionTitle',
+      descKey: 'about.missionText',
     },
     {
       icon: Heart,
-      title: 'Наш подход',
-      desc: 'Индивидуальное внимание к каждому ученику, современные методики обучения, позитивная атмосфера и постоянная мотивация к развитию.',
+      titleKey: 'about.approachTitle',
+      descKey: 'about.approachText',
     },
     {
       icon: Star,
-      title: 'Наши ценности',
-      desc: 'Честность, настойчивость, уважение к сопернику. Победа важна, но важнее — характер, который формируется в процессе борьбы.',
+      titleKey: 'about.valuesTitle',
+      descKey: 'about.valuesText',
     },
   ];
 
@@ -44,26 +47,26 @@ export default async function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-king-gold font-semibold text-sm uppercase tracking-widest mb-3">С 2015 года</p>
-              <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-6">О ChessKing</h1>
+              <p className="text-king-gold font-semibold text-sm uppercase tracking-widest mb-3"><T k="about.since" /></p>
+              <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-6"><T k="about.title" /></h1>
               <p className="text-gray-300 text-lg leading-relaxed mb-6">
-                ChessKing — ведущая шахматная академия Казахстана, основанная в 2015 году с целью сделать профессиональное обучение шахматам доступным для каждого.
+                <T k="about.intro" />
               </p>
               <p className="text-gray-400 leading-relaxed">
-                За 9 лет работы мы подготовили сотни учеников, организовали десятки турниров и создали сообщество настоящих любителей шахматного искусства. Наши воспитанники участвуют в национальных и международных соревнованиях.
+                <T k="about.story" />
               </p>
             </div>
             <div className="hidden lg:grid grid-cols-2 gap-4">
               {[
-                { icon: Crown, val: '2015', label: 'Год основания' },
-                { icon: Trophy, val: '120+', label: 'Турниров' },
-                { icon: Star, val: '500+', label: 'Выпускников' },
-                { icon: Heart, val: '3', label: 'Города' },
-              ].map(({ icon: Icon, val, label }) => (
-                <div key={label} className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/20">
+                { icon: Crown, val: '2015', labelKey: 'about.founded' },
+                { icon: Trophy, val: '120+', labelKey: 'home.statsTournaments' },
+                { icon: Star, val: '500+', labelKey: 'home.statsStudents' },
+                { icon: Heart, val: '2', labelKey: 'about.cities' },
+              ].map(({ icon: Icon, val, labelKey }) => (
+                <div key={labelKey} className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/20">
                   <Icon className="w-8 h-8 text-king-gold mx-auto mb-3" />
                   <p className="font-display text-2xl font-bold text-white">{val}</p>
-                  <p className="text-gray-300 text-sm mt-1">{label}</p>
+                  <p className="text-gray-300 text-sm mt-1"><T k={labelKey} /></p>
                 </div>
               ))}
             </div>
@@ -75,16 +78,16 @@ export default async function AboutPage() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="section-title">Наши принципы</h2>
+            <h2 className="section-title"><T k="about.principles" /></h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {values.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="text-center p-8 rounded-2xl border border-gray-100 hover:shadow-card transition-shadow">
+            {values.map(({ icon: Icon, titleKey, descKey }) => (
+              <div key={titleKey} className="text-center p-8 rounded-2xl border border-gray-100 hover:shadow-card transition-shadow">
                 <div className="w-14 h-14 bg-royal-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
                   <Icon className="w-7 h-7 text-king-blue" />
                 </div>
-                <h3 className="font-display text-xl font-bold text-king-navy mb-3">{title}</h3>
-                <p className="text-king-gray leading-relaxed">{desc}</p>
+                <h3 className="font-display text-xl font-bold text-king-navy mb-3"><T k={titleKey} /></h3>
+                <p className="text-king-gray leading-relaxed"><T k={descKey} /></p>
               </div>
             ))}
           </div>
@@ -96,8 +99,8 @@ export default async function AboutPage() {
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="section-title">Наши тренеры</h2>
-              <p className="section-subtitle">Профессионалы с богатым опытом</p>
+              <h2 className="section-title"><T k="about.coachesTitle" /></h2>
+              <p className="section-subtitle"><T k="about.coachesSubtitle" /></p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {coaches.map((c: any) => (
@@ -112,8 +115,8 @@ export default async function AboutPage() {
                     )}
                   </div>
                   <h3 className="font-display font-bold text-king-navy">{c.name}</h3>
-                  <p className="text-king-gold text-sm font-medium mt-1">{c.title}</p>
-                  <p className="text-king-gray text-xs mt-1">{c.experience} лет опыта</p>
+                  <p className="text-king-gold text-sm font-medium mt-1"><DynamicText text={c.title} cacheKey={`coach-title-${c._id}`} /></p>
+                  <p className="text-king-gray text-xs mt-1"><T k="common.yearsExperience" values={{ count: c.experience }} /></p>
                 </div>
               ))}
             </div>
@@ -126,8 +129,8 @@ export default async function AboutPage() {
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="section-title">Наши чемпионы</h2>
-              <p className="section-subtitle">Гордость ChessKing</p>
+              <h2 className="section-title"><T k="about.championsTitle" /></h2>
+              <p className="section-subtitle"><T k="about.championsSubtitle" /></p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {champions.map((ch: any) => (
@@ -143,7 +146,9 @@ export default async function AboutPage() {
                   </div>
                   <h4 className="font-display font-bold text-king-navy text-sm">{ch.name}</h4>
                   <p className="text-king-gold text-xs font-medium mt-0.5">{ch.year}</p>
-                  <p className="text-king-gray text-xs mt-1 leading-relaxed">{ch.achievement}</p>
+                  <p className="text-king-gray text-xs mt-1 leading-relaxed">
+                    <DynamicText text={ch.achievement} cacheKey={`champion-achievement-${ch._id}`} />
+                  </p>
                 </div>
               ))}
             </div>

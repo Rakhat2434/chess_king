@@ -3,19 +3,26 @@
 import Link from 'next/link';
 import { Crown, MapPin, Phone, Instagram, MessageCircle, Mail, ChevronRight } from 'lucide-react';
 import { DISPLAY_PHONE, getWhatsAppUrl, INSTAGRAM_URL, PHONE_HREF } from '@/lib/utils';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 
 const footerLinks = [
-  { href: '/', label: 'Главная' },
-  { href: '/news', label: 'Новости' },
-  { href: '/tournaments', label: 'Турниры' },
-  { href: '/branches', label: 'Филиалы' },
-  { href: '/coaches', label: 'Тренеры' },
-  { href: '/enroll', label: 'Записаться' },
-  { href: '/about', label: 'О нас' },
+  { href: '/', labelKey: 'nav.home' },
+  { href: '/news', labelKey: 'nav.news' },
+  { href: '/tournaments', labelKey: 'nav.tournaments' },
+  { href: '/branches', labelKey: 'nav.branches' },
+  { href: '/coaches', labelKey: 'nav.coaches' },
+  { href: '/enroll', labelKey: 'nav.enroll' },
+  { href: '/about', labelKey: 'nav.about' },
 ];
 
 export default function Footer() {
+  const { t } = useTranslation();
   const year = new Date().getFullYear();
+  const branches = [
+    { name: t('footer.branch1'), addr: t('footer.branch1Address') },
+    { name: t('footer.branch2'), addr: t('footer.branch2Address') },
+    { name: t('footer.branch3'), addr: t('footer.branch3Address') },
+  ];
 
   return (
     <footer className="bg-king-dark text-gray-300">
@@ -34,7 +41,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed mb-5">
-              Ведущая шахматная академия Казахстана. Профессиональные тренеры, турниры и занятия для всех возрастов.
+              {t('common.brandDescription')}
             </p>
             <div className="flex gap-3">
               <a
@@ -60,7 +67,7 @@ export default function Footer() {
 
           {/* Navigation */}
           <div>
-            <h4 className="font-display text-white font-semibold mb-4 text-base">Навигация</h4>
+            <h4 className="font-display text-white font-semibold mb-4 text-base">{t('footer.navigation')}</h4>
             <ul className="space-y-2">
               {footerLinks.map((link) => (
                 <li key={link.href}>
@@ -69,7 +76,7 @@ export default function Footer() {
                     className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-king-gold transition-colors group"
                   >
                     <ChevronRight className="w-3 h-3 text-king-gold/50 group-hover:text-king-gold transition-colors" />
-                    {link.label}
+                    {t(link.labelKey)}
                   </Link>
                 </li>
               ))}
@@ -78,7 +85,7 @@ export default function Footer() {
 
           {/* Contacts */}
           <div>
-            <h4 className="font-display text-white font-semibold mb-4 text-base">Контакты</h4>
+            <h4 className="font-display text-white font-semibold mb-4 text-base">{t('footer.contacts')}</h4>
             <ul className="space-y-3">
               <li>
                 <a
@@ -114,13 +121,9 @@ export default function Footer() {
 
           {/* Branches */}
           <div>
-            <h4 className="font-display text-white font-semibold mb-4 text-base">Филиалы</h4>
+            <h4 className="font-display text-white font-semibold mb-4 text-base">{t('common.branches')}</h4>
             <ul className="space-y-3">
-              {[
-                { name: 'Филиал №1 — Есиль', addr: 'ул. Сауран, 24' },
-                { name: 'Филиал №2 — Алматы', addr: 'пр. Достык, 162' },
-                { name: 'Филиал №3 — Байконур', addr: 'ул. Абая, 10' },
-              ].map((b) => (
+              {branches.map((b) => (
                 <li key={b.name} className="flex items-start gap-2.5">
                   <MapPin className="w-4 h-4 mt-0.5 text-king-gold flex-shrink-0" />
                   <div>
@@ -131,7 +134,7 @@ export default function Footer() {
               ))}
               <li>
                 <Link href="/branches" className="text-xs text-king-gold hover:text-gold-300 transition-colors">
-                  Все филиалы →
+                  {t('footer.allBranches')}
                 </Link>
               </li>
             </ul>
@@ -143,14 +146,14 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-gray-500">
-            © {year} ChessKing Academy. Все права защищены.
+            {t('footer.rights', { year })}
           </p>
           <div className="flex items-center gap-4">
             <Link href="/enroll" className="text-xs text-gray-400 hover:text-king-gold transition-colors">
-              Записаться на урок
+              {t('footer.lessonEnroll')}
             </Link>
             <span className="text-gray-700">·</span>
-            <p className="text-xs text-gray-600">Made with ♟ in Kazakhstan</p>
+            <p className="text-xs text-gray-600">{t('footer.madeIn')}</p>
           </div>
         </div>
       </div>

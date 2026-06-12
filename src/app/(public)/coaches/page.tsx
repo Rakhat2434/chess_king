@@ -4,12 +4,15 @@ import Link from 'next/link';
 import connectDB from '@/lib/db';
 import Coach from '@/models/Coach';
 import { User, Trophy, BookOpen, MapPin } from 'lucide-react';
+import { translate } from '@/lib/i18n';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Тренеры',
-  description: 'Наши опытные шахматные тренеры',
+  title: translate('ru', 'coaches.metaTitle'),
+  description: translate('ru', 'coaches.metaDescription'),
 };
 
 export default async function CoachesPage() {
@@ -23,9 +26,9 @@ export default async function CoachesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-royal-gradient chess-bg py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-king-gold font-semibold text-sm uppercase tracking-widest mb-3">Наша команда</p>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">Тренеры</h1>
-          <p className="text-gray-300 text-lg">Профессионалы с многолетним опытом</p>
+          <p className="text-king-gold font-semibold text-sm uppercase tracking-widest mb-3"><T k="coaches.badge" /></p>
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4"><T k="coaches.title" /></h1>
+          <p className="text-gray-300 text-lg"><T k="coaches.subtitle" /></p>
         </div>
       </div>
 
@@ -33,7 +36,7 @@ export default async function CoachesPage() {
         {coaches.length === 0 && (
           <div className="text-center py-20 text-king-gray">
             <User className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-            <p className="font-display text-xl">Тренеры скоро появятся</p>
+            <p className="font-display text-xl"><T k="coaches.empty" /></p>
           </div>
         )}
 
@@ -57,7 +60,9 @@ export default async function CoachesPage() {
                   </div>
                 )}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-king-navy/80 p-4">
-                  <span className="text-king-gold text-xs font-semibold">{coach.title}</span>
+                  <span className="text-king-gold text-xs font-semibold">
+                    <DynamicText text={coach.title} cacheKey={`coach-title-${coach._id}`} />
+                  </span>
                 </div>
               </div>
 
@@ -66,28 +71,30 @@ export default async function CoachesPage() {
                 {coach.branch && (
                   <p className="text-xs text-king-gray flex items-center gap-1 mb-3">
                     <MapPin className="w-3.5 h-3.5 text-king-gold" />
-                    {coach.branch.name}
+                    <DynamicText text={coach.branch.name} cacheKey={`branch-name-${coach.branch._id || coach.branch.name}`} />
                   </p>
                 )}
 
                 <div className="flex items-center gap-1.5 text-xs text-king-gray mb-3">
                   <BookOpen className="w-3.5 h-3.5 text-king-gold" />
-                  Опыт: <span className="font-semibold text-king-navy">{coach.experience} лет</span>
+                  <T k="coaches.experience" /> <span className="font-semibold text-king-navy"><T k="common.yearsCount" values={{ count: coach.experience }} /></span>
                 </div>
 
-                <p className="text-sm text-king-gray leading-relaxed mb-4 line-clamp-3">{coach.bio}</p>
+                <p className="text-sm text-king-gray leading-relaxed mb-4 line-clamp-3">
+                  <DynamicText text={coach.bio} cacheKey={`coach-bio-${coach._id}`} />
+                </p>
 
                 {coach.achievements?.length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs font-semibold text-king-gray uppercase tracking-widest mb-2 flex items-center gap-1">
                       <Trophy className="w-3.5 h-3.5 text-king-gold" />
-                      Достижения
+                      <T k="coaches.achievements" />
                     </p>
                     <ul className="space-y-1">
                       {coach.achievements.slice(0, 2).map((a: string, i: number) => (
                         <li key={i} className="text-xs text-king-gray flex items-start gap-1.5">
                           <span className="text-king-gold mt-0.5">•</span>
-                          {a}
+                          <DynamicText text={a} cacheKey={`coach-achievement-${coach._id}-${i}`} />
                         </li>
                       ))}
                     </ul>
@@ -98,7 +105,7 @@ export default async function CoachesPage() {
                   href={`/enroll?coach=${coach._id.toString()}&branch=${coach.branch?._id || ''}`}
                   className="btn-primary mt-auto w-full justify-center text-sm py-2.5"
                 >
-                  Записаться к тренеру
+                  <T k="coaches.enroll" />
                 </Link>
               </div>
             </div>

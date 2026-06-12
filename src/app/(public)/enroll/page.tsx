@@ -5,12 +5,15 @@ import Coach from '@/models/Coach';
 import EnrollForm from '@/components/forms/EnrollForm';
 import { Crown, Phone, MessageCircle, Instagram, MapPin, Clock } from 'lucide-react';
 import { DISPLAY_PHONE, getWhatsAppUrl, INSTAGRAM_URL, PHONE_HREF } from '@/lib/utils';
+import { translate } from '@/lib/i18n';
+import T from '@/components/i18n/T';
+import DynamicText from '@/components/i18n/DynamicText';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Записаться на занятия',
-  description: 'Запишитесь на шахматные занятия в ChessKing',
+  title: translate('ru', 'enrollPage.metaTitle'),
+  description: translate('ru', 'enrollPage.metaDescription'),
 };
 
 interface Props {
@@ -29,9 +32,9 @@ export default async function EnrollPage({ searchParams }: Props) {
       {/* Header */}
       <div className="bg-royal-gradient chess-bg py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-king-gold font-semibold text-sm uppercase tracking-widest mb-3">Первый шаг</p>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">Записаться к нам</h1>
-          <p className="text-gray-300 text-lg">Первое занятие — бесплатно. Подберём группу под ваш уровень.</p>
+          <p className="text-king-gold font-semibold text-sm uppercase tracking-widest mb-3"><T k="enrollPage.badge" /></p>
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4"><T k="enrollPage.title" /></h1>
+          <p className="text-gray-300 text-lg"><T k="enrollPage.subtitle" /></p>
         </div>
       </div>
 
@@ -40,7 +43,7 @@ export default async function EnrollPage({ searchParams }: Props) {
           {/* Form */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-3xl shadow-card p-8">
-              <h2 className="font-display text-2xl font-bold text-king-navy mb-6">Заявка на обучение</h2>
+              <h2 className="font-display text-2xl font-bold text-king-navy mb-6"><T k="enrollPage.formTitle" /></h2>
               <EnrollForm
                 branches={JSON.parse(JSON.stringify(branches))}
                 coaches={JSON.parse(JSON.stringify(coaches))}
@@ -54,7 +57,7 @@ export default async function EnrollPage({ searchParams }: Props) {
           <div className="space-y-5">
             {/* Contact */}
             <div className="bg-white rounded-2xl shadow-card p-6">
-              <h3 className="font-display text-lg font-semibold text-king-navy mb-4">Связаться с нами</h3>
+              <h3 className="font-display text-lg font-semibold text-king-navy mb-4"><T k="enrollPage.contactTitle" /></h3>
               <div className="space-y-3">
                 <a
                   href={PHONE_HREF}
@@ -66,7 +69,7 @@ export default async function EnrollPage({ searchParams }: Props) {
                   {DISPLAY_PHONE}
                 </a>
                 <a
-                  href={getWhatsAppUrl('Хочу записаться на занятия')}
+                  href={getWhatsAppUrl(translate('ru', 'whatsappMessages.enrollLesson'))}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-sm text-king-gray hover:text-green-600 transition-colors"
@@ -92,18 +95,20 @@ export default async function EnrollPage({ searchParams }: Props) {
 
             {/* Branches */}
             <div className="bg-white rounded-2xl shadow-card p-6">
-              <h3 className="font-display text-lg font-semibold text-king-navy mb-4">Наши филиалы</h3>
+              <h3 className="font-display text-lg font-semibold text-king-navy mb-4"><T k="enrollPage.branchesTitle" /></h3>
               <div className="space-y-4">
                 {branches.map((b: any) => (
                   <div key={b._id.toString()} className="border-l-2 border-king-gold pl-4">
-                    <p className="font-semibold text-king-navy text-sm">{b.name}</p>
+                    <p className="font-semibold text-king-navy text-sm">
+                      <DynamicText text={b.name} cacheKey={`branch-name-${b._id}`} />
+                    </p>
                     <p className="text-xs text-king-gray flex items-center gap-1 mt-0.5">
                       <MapPin className="w-3 h-3" />
-                      {b.address}
+                      <DynamicText text={b.address} cacheKey={`branch-address-${b._id}`} />
                     </p>
                     <p className="text-xs text-king-gray flex items-center gap-1 mt-0.5">
                       <Clock className="w-3 h-3" />
-                      {b.schedule}
+                      <DynamicText text={b.schedule} cacheKey={`branch-schedule-${b._id}`} />
                     </p>
                   </div>
                 ))}
@@ -113,16 +118,16 @@ export default async function EnrollPage({ searchParams }: Props) {
             {/* CTA direct */}
             <div className="bg-royal-gradient chess-bg rounded-2xl p-6 text-center">
               <Crown className="w-8 h-8 text-king-gold mx-auto mb-3" />
-              <p className="font-display text-white font-bold text-base mb-2">Первый урок бесплатно</p>
-              <p className="text-gray-300 text-xs mb-4">Оцените наш подход без обязательств</p>
+              <p className="font-display text-white font-bold text-base mb-2"><T k="enrollPage.trialTitle" /></p>
+              <p className="text-gray-300 text-xs mb-4"><T k="enrollPage.trialText" /></p>
               <a
-                href={getWhatsAppUrl('Хочу пробный урок бесплатно!')}
+                href={getWhatsAppUrl(translate('ru', 'whatsappMessages.freeTrial'))}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gold text-sm py-2.5 w-full justify-center"
               >
                 <MessageCircle className="w-4 h-4" />
-                Написать сейчас
+                <T k="enrollPage.writeNow" />
               </a>
             </div>
           </div>

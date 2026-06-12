@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
@@ -10,31 +10,43 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
 import { isValidEmailAddress, isValidKazakhstanPhone } from '@/lib/validators';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 
-const schema = z.object({
-  name: z.string().min(2, 'Минимум 2 символа').max(100),
-  email: z.string()
-    .trim()
-    .refine(isValidEmailAddress, 'Введите рабочий email, не тестовый адрес'),
-  phone: z.string()
-    .trim()
-    .refine(isValidKazakhstanPhone, 'Введите корректный мобильный номер Казахстана'),
-  password: z.string()
-    .min(8, 'Пароль должен содержать минимум 8 символов')
-    .regex(/[A-Za-zА-Яа-яЁё]/, 'Пароль должен содержать минимум 1 букву')
-    .regex(/\d/, 'Пароль должен содержать минимум 1 цифру')
-    .max(128, 'Пароль слишком длинный'),
-  confirm: z.string(),
-  website: z.string().optional(),
-}).refine((d) => d.password === d.confirm, {
-  message: 'Пароли не совпадают',
-  path: ['confirm'],
-});
-type FormData = z.infer<typeof schema>;
+type FormData = {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirm: string;
+  website?: string;
+};
 
 export default function RegisterPage() {
+  const { t, message } = useTranslation();
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
+  const schema = useMemo(
+    () =>
+      z
+        .object({
+          name: z.string().min(2, t('auth.validationName')).max(100),
+          email: z.string().trim().refine(isValidEmailAddress, t('auth.validationWorkEmail')),
+          phone: z.string().trim().refine(isValidKazakhstanPhone, t('auth.validationPhone')),
+          password: z
+            .string()
+            .min(8, t('auth.validationPasswordMin'))
+            .regex(/[A-Za-zА-Яа-яЁё]/, t('auth.validationPasswordLetter'))
+            .regex(/\d/, t('auth.validationPasswordDigit'))
+            .max(128, t('auth.validationPasswordLong')),
+          confirm: z.string(),
+          website: z.string().optional(),
+        })
+        .refine((d) => d.password === d.confirm, {
+          message: t('auth.validationPasswordsMatch'),
+          path: ['confirm'],
+        }),
+    [t]
+  );
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
@@ -54,25 +66,25 @@ export default function RegisterPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Ошибка регистрации');
+        throw new Error(err.error || t('auth.registerError'));
       }
       const signInResult = await signIn('credentials', { email: data.email, password: data.password, redirect: false });
-      if (signInResult?.error) throw new Error('Аккаунт создан, но автоматический вход не удался');
-      toast.success('Аккаунт создан!');
+      if (signInResult?.error) throw new Error(t('auth.autoLoginFailed'));
+      toast.success(t('auth.accountCreated'));
       router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(message(err.message));
     }
   };
 
   return (
     <>
-      <h1 className="font-display text-2xl font-bold text-king-navy mb-1">Регистрация</h1>
+      <h1 className="font-display text-2xl font-bold text-king-navy mb-1">{t('auth.registerTitle')}</h1>
       <p className="text-king-gray text-sm mb-8">
-        Уже есть аккаунт?{' '}
+        {t('auth.hasAccount')}{' '}
         <Link href="/login" className="text-king-blue font-medium hover:underline">
-          Войти
+          {t('auth.loginButton')}
         </Link>
       </p>
 
@@ -86,28 +98,28 @@ export default function RegisterPage() {
           aria-hidden="true"
         />
         <div>
-          <label className="label">Имя *</label>
-          <input {...register('name')} className="input" placeholder="Иванов Иван" autoComplete="name" />
+          <label className="label">{t('auth.name')}</label>
+          <input {...register('name')} className="input" placeholder={t('auth.namePlaceholder')} autoComplete="name" />
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
         </div>
         <div>
-          <label className="label">Email *</label>
+          <label className="label">{t('auth.email')} *</label>
           <input {...register('email')} type="email" className="input" placeholder="example@mail.com" autoComplete="email" />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
         </div>
         <div>
-          <label className="label">Телефон *</label>
+          <label className="label">{t('auth.phone')}</label>
           <input {...register('phone')} className="input" placeholder="+7 (700) 000-00-00" autoComplete="tel" />
           {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
         </div>
         <div>
-          <label className="label">Пароль *</label>
+          <label className="label">{t('auth.passwordLabel')}</label>
           <div className="relative">
             <input
               {...register('password')}
               type={showPass ? 'text' : 'password'}
               className="input pr-12"
-              placeholder="Минимум 8 символов, буква и цифра"
+              placeholder={t('auth.passwordPlaceholder')}
               autoComplete="new-password"
             />
             <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -117,14 +129,14 @@ export default function RegisterPage() {
           {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
         </div>
         <div>
-          <label className="label">Повторите пароль *</label>
+          <label className="label">{t('auth.confirmPassword')}</label>
           <input {...register('confirm')} type={showPass ? 'text' : 'password'} className="input" placeholder="••••••••" autoComplete="new-password" />
           {errors.confirm && <p className="text-red-500 text-xs mt-1">{errors.confirm.message}</p>}
         </div>
 
         <button type="submit" disabled={isSubmitting} className="btn-gold w-full py-3.5 mt-2">
           <UserPlus className="w-5 h-5" />
-          {isSubmitting ? 'Создание...' : 'Создать аккаунт'}
+          {isSubmitting ? t('auth.creating') : t('auth.createAccount')}
         </button>
       </form>
     </>

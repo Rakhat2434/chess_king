@@ -3,8 +3,10 @@ import { Playfair_Display, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import SessionProvider from '@/components/providers/SessionProvider';
+import LanguageProvider from '@/components/providers/LanguageProvider';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { translate } from '@/lib/i18n';
 
 const playfair = Playfair_Display({
   subsets: ['latin', 'cyrillic'],
@@ -27,24 +29,23 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://chessking.kz'),
   title: {
-    default: 'ChessKing — Шахматная Академия',
+    default: translate('ru', 'home.metaTitle'),
     template: '%s | ChessKing',
   },
-  description:
-    'ChessKing — ведущая шахматная академия Казахстана. Профессиональные тренеры, турниры, кружки для детей и взрослых.',
+  description: translate('ru', 'home.metaDescription'),
   keywords: ['шахматы', 'шахматная академия', 'Chess King', 'шахматы Астана', 'обучение шахматам'],
   openGraph: {
     type: 'website',
     locale: 'ru_KZ',
     siteName: 'ChessKing',
-    title: 'ChessKing — Шахматная Академия',
-    description: 'Профессиональные тренеры, турниры и занятия для всех уровней.',
+    title: translate('ru', 'home.metaTitle'),
+    description: translate('ru', 'home.metaDescription'),
     images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'ChessKing Academy' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ChessKing Academy',
-    description: 'Шахматная академия нового поколения',
+    description: translate('ru', 'home.badge'),
     images: ['/og-image.jpg'],
   },
   icons: {
@@ -59,28 +60,30 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="ru" className={`${playfair.variable} ${inter.variable} ${jetbrains.variable}`}>
       <body>
-        <SessionProvider session={session}>
-          {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#0F1B3D',
-                color: '#FAFAFA',
-                borderRadius: '12px',
-                fontSize: '14px',
-                fontFamily: 'Inter, sans-serif',
-              },
-              success: {
-                iconTheme: { primary: '#F59E0B', secondary: '#0F1B3D' },
-              },
-              error: {
-                iconTheme: { primary: '#EF4444', secondary: '#FAFAFA' },
-              },
-            }}
-          />
-        </SessionProvider>
+        <LanguageProvider>
+          <SessionProvider session={session}>
+            {children}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#0F1B3D',
+                  color: '#FAFAFA',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                },
+                success: {
+                  iconTheme: { primary: '#F59E0B', secondary: '#0F1B3D' },
+                },
+                error: {
+                  iconTheme: { primary: '#EF4444', secondary: '#FAFAFA' },
+                },
+              }}
+            />
+          </SessionProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

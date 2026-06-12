@@ -3,6 +3,7 @@
 import { Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn, getShareUrl } from '@/lib/utils';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 
 interface Props {
   url: string;
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export default function ShareButton({ url, className, showLabel }: Props) {
+  const { t } = useTranslation();
+
   const handleShare = async () => {
     const fullUrl = getShareUrl(url);
     if (navigator.share) {
@@ -19,7 +22,7 @@ export default function ShareButton({ url, className, showLabel }: Props) {
       } catch {}
     } else {
       await navigator.clipboard.writeText(fullUrl);
-      toast.success('Ссылка скопирована!');
+      toast.success(t('common.copied'));
     }
   };
 
@@ -27,10 +30,10 @@ export default function ShareButton({ url, className, showLabel }: Props) {
     <button
       onClick={handleShare}
       className={cn('transition-colors', className)}
-      aria-label="Поделиться"
+      aria-label={t('common.share')}
     >
       <Share2 className="w-4 h-4" />
-      {showLabel && <span>Поделиться</span>}
+      {showLabel && <span>{t('common.share')}</span>}
     </button>
   );
 }

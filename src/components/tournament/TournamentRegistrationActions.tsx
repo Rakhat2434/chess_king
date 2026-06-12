@@ -6,6 +6,7 @@ import { LogIn, MessageCircle, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getWhatsAppUrl } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 
 type RegistrationStatus = 'pending' | 'approved' | 'rejected' | 'attended' | 'cancelled';
 
@@ -19,12 +20,12 @@ interface Props {
   initialStatus?: RegistrationStatus | null;
 }
 
-const statusInfo: Record<RegistrationStatus, { label: string; color: string }> = {
-  pending: { label: 'Заявка отправлена', color: 'bg-yellow-100 text-yellow-700' },
-  approved: { label: 'Участие подтверждено', color: 'bg-green-100 text-green-700' },
-  rejected: { label: 'Отклонено', color: 'bg-red-100 text-red-700' },
-  attended: { label: 'Вы участвовали', color: 'bg-blue-100 text-blue-700' },
-  cancelled: { label: 'Отменено', color: 'bg-gray-100 text-gray-600' },
+const statusInfo: Record<RegistrationStatus, { labelKey: string; color: string }> = {
+  pending: { labelKey: 'tournamentRegistration.statusPending', color: 'bg-yellow-100 text-yellow-700' },
+  approved: { labelKey: 'tournamentRegistration.statusApproved', color: 'bg-green-100 text-green-700' },
+  rejected: { labelKey: 'tournamentRegistration.statusRejected', color: 'bg-red-100 text-red-700' },
+  attended: { labelKey: 'tournamentRegistration.statusAttended', color: 'bg-blue-100 text-blue-700' },
+  cancelled: { labelKey: 'tournamentRegistration.statusCancelled', color: 'bg-gray-100 text-gray-600' },
 };
 
 export default function TournamentRegistrationActions({
@@ -36,19 +37,24 @@ export default function TournamentRegistrationActions({
   isClosed,
   initialStatus,
 }: Props) {
+  const { t, message } = useTranslation();
   const [status, setStatus] = useState<RegistrationStatus | null>(initialStatus || null);
   const [loading, setLoading] = useState(false);
 
-  const whatsappMessage = `Здравствуйте! Хочу зарегистрироваться на турнир: ${title}. Дата: ${dateLabel}. Филиал: ${branchLabel}.`;
+  const whatsappMessage = t('whatsappMessages.tournament', {
+    title,
+    date: dateLabel,
+    branch: branchLabel || t('common.notSpecified'),
+  });
 
   const submitRegistration = async () => {
     if (!isAuthenticated) {
-      toast.error('Войдите, чтобы подать заявку на турнир');
+      toast.error(t('tournamentRegistration.loginRequired'));
       return;
     }
 
     if (isClosed) {
-      toast.error('Регистрация на завершенный турнир закрыта');
+      toast.error(t('tournamentRegistration.closed'));
       return;
     }
 
@@ -56,12 +62,12 @@ export default function TournamentRegistrationActions({
     try {
       const res = await fetch(`/api/tournaments/${tournamentId}/register`, { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Не удалось отправить заявку');
+      if (!res.ok) throw new Error(data.error || t('tournamentRegistration.sendError'));
 
       setStatus(data.status);
-      toast.success(data.alreadyExists ? 'Заявка уже есть' : 'Заявка на турнир отправлена');
+      toast.success(data.alreadyExists ? t('tournamentRegistration.alreadyExists') : t('tournamentRegistration.success'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Ошибка отправки заявки');
+      toast.error(err instanceof Error ? message(err.message) : t('tournamentRegistration.sendError'));
     } finally {
       setLoading(false);
     }
@@ -71,14 +77,14 @@ export default function TournamentRegistrationActions({
     <div className="bg-gray-50 rounded-2xl p-5 mb-10 border border-gray-100">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="font-display text-lg font-bold text-king-navy">Участие в турнире</p>
+          <p className="font-display text-lg font-bold text-king-navy">{t('tournamentRegistration.title')}</p>
           {status ? (
             <span className={cn('inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold', statusInfo[status].color)}>
-              {statusInfo[status].label}
+              {t(statusInfo[status].labelKey)}
             </span>
           ) : (
             <p className="text-sm text-king-gray mt-1">
-              Подайте заявку на сайте или напишите нам в WhatsApp.
+              {t('tournamentRegistration.description')}
             </p>
           )}
         </div>
@@ -91,13 +97,13 @@ export default function TournamentRegistrationActions({
             className="btn-primary py-2.5 px-5 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Send className="w-4 h-4" />
-            {loading ? 'Отправка...' : status ? 'Заявка создана' : 'Подать заявку на сайте'}
+            {loading ? t('common.sending') : status ? t('tournamentRegistration.created') : t('tournamentRegistration.submit')}
           </button>
 
           {!isAuthenticated && (
             <Link href="/login" className="btn-outline py-2.5 px-5 text-sm inline-flex">
               <LogIn className="w-4 h-4" />
-              Войти
+              {t('tournamentRegistration.login')}
             </Link>
           )}
 
@@ -108,7 +114,7 @@ export default function TournamentRegistrationActions({
             className="btn-outline py-2.5 px-5 text-sm inline-flex"
           >
             <MessageCircle className="w-4 h-4 text-green-500" />
-            Написать в WhatsApp
+            {t('tournamentRegistration.writeWhatsapp')}
           </a>
         </div>
       </div>
