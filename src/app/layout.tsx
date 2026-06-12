@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Playfair_Display, Inter, JetBrains_Mono } from 'next/font/google';
+import { Noto_Sans, Noto_Serif, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import SessionProvider from '@/components/providers/SessionProvider';
@@ -8,16 +8,20 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { translate } from '@/lib/i18n';
 
-const playfair = Playfair_Display({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-playfair',
+const notoSerif = Noto_Serif({
+  subsets: ['latin', 'latin-ext', 'cyrillic', 'cyrillic-ext'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-heading',
   display: 'swap',
+  fallback: ['Georgia', 'serif'],
 });
 
-const inter = Inter({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-inter',
+const notoSans = Noto_Sans({
+  subsets: ['latin', 'latin-ext', 'cyrillic', 'cyrillic-ext'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-body',
   display: 'swap',
+  fallback: ['Inter', 'Arial', 'sans-serif'],
 });
 
 const jetbrains = JetBrains_Mono({
@@ -58,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang="ru" className={`${playfair.variable} ${inter.variable} ${jetbrains.variable}`}>
+    <html lang="ru" className={`${notoSerif.variable} ${notoSans.variable} ${jetbrains.variable}`}>
       <body>
         <LanguageProvider>
           <SessionProvider session={session}>
@@ -72,7 +76,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   color: '#FAFAFA',
                   borderRadius: '12px',
                   fontSize: '14px',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'var(--font-body)',
                 },
                 success: {
                   iconTheme: { primary: '#F59E0B', secondary: '#0F1B3D' },

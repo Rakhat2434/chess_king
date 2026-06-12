@@ -57,8 +57,8 @@ export default function Navbar() {
               <Crown className="h-5 w-5 text-[#0B1F3A]" />
             </div>
             <div className="leading-tight">
-              <span className="font-display text-xl font-bold tracking-tight text-white">Chess</span>
-              <span className="font-display text-xl font-bold tracking-tight text-[#F59E0B]">King</span>
+              <span className="font-display text-xl font-bold tracking-normal text-white">Chess</span>
+              <span className="font-display text-xl font-bold tracking-normal text-[#F59E0B]">King</span>
             </div>
           </Link>
 

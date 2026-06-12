@@ -55,7 +55,7 @@ export default async function TournamentsPage({ searchParams }: Props) {
               <Sparkles className="h-4 w-4 text-[#F59E0B]" />
               <T k="tournaments.badge" />
             </div>
-            <h1 className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl"><T k="tournaments.title" /></h1>
+            <h1 className="hero-title font-display text-5xl text-white sm:text-6xl"><T k="tournaments.title" /></h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-200">
               <T k="tournaments.subtitle" />
             </p>

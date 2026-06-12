@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 :root {
-  --font-playfair: 'Playfair Display', Georgia, serif;
-  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-heading: "Noto Serif", Georgia, serif;
+  --font-body: "Noto Sans", Inter, Arial, sans-serif;
+  --font-playfair: var(--font-heading);
+  --font-inter: var(--font-body);
   --font-jetbrains: 'JetBrains Mono', monospace;
 
   --color-navy: #0B1F3A;
@@ -29,11 +31,12 @@
 
   body {
     @apply bg-slate-50 text-[#0B1F3A] antialiased;
-    font-family: var(--font-inter);
+    font-family: var(--font-body);
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-playfair);
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+    line-height: 1.15;
   }
 }
 
@@ -64,7 +67,14 @@
   }
 
   .section-title {
-    @apply font-display text-4xl font-bold tracking-tight text-[#0B1F3A] md:text-5xl;
+    @apply font-display text-4xl font-bold tracking-normal text-[#0B1F3A] md:text-5xl;
+  }
+
+  .hero-title {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: 0;
   }
 
   .section-subtitle {
@@ -161,7 +171,7 @@
   margin-top: 1rem;
 }
 .prose-king h1, .prose-king h2, .prose-king h3 {
-  font-family: var(--font-playfair);
+  font-family: var(--font-heading);
   color: var(--color-navy);
   font-weight: 700;
   line-height: 1.2;

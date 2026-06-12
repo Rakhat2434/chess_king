@@ -48,8 +48,8 @@ const config: Config = {
         }
       },
       fontFamily: {
-        display: ['var(--font-playfair)', 'Georgia', 'serif'],
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-heading)', 'Georgia', 'serif'],
+        sans: ['var(--font-body)', 'Inter', 'Arial', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'monospace'],
       },
       backgroundImage: {

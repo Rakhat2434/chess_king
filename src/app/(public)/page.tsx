@@ -103,7 +103,7 @@ export default async function HomePage() {
               <T k="home.badge" />
             </div>
 
-            <h1 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="hero-title font-display text-5xl text-white sm:text-6xl lg:text-7xl">
               <T k="home.heroTitleStart" />{' '}
               <span className="bg-gradient-to-r from-[#F59E0B] via-amber-200 to-[#F59E0B] bg-clip-text text-transparent">
                 <T k="home.heroTitleHighlight" />
@@ -357,7 +357,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 chess-bg opacity-30" />
         <Reveal className="relative mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#F59E0B]"><T k="home.startEyebrow" /></p>
-          <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
+          <h2 className="hero-title mt-3 font-display text-4xl text-white sm:text-5xl">
             <T k="home.startTitle" />
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-200">
